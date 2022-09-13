@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@bugsnag/js": "^7.17.4",
+    "@bugsnag/plugin-express": "^7.17.4",
     "compression": "^1.7.4",
     "config": "^3.3.7",
     "expo-server-sdk": "^3.6.0",
