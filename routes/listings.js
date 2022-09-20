@@ -12,6 +12,8 @@ const delay = require("../middleware/delay");
 const listingMapper = require("../mappers/listings");
 const config = require("config");
 
+// const { uploadFile } = require("./s3");
+
 const upload = multer({
   dest: "uploads/",
   limits: { fieldSize: 25 * 1024 * 1024 },
@@ -62,6 +64,8 @@ router.post(
   ],
 
   async (req, res) => {
+    console.log("req.body", req.body);
+    console.log("req.file", req.file);
     const listing = {
       title: req.body.title,
       price: parseFloat(req.body.price),
@@ -71,10 +75,10 @@ router.post(
     listing.images = req.images.map((fileName) => ({ fileName: fileName }));
     if (req.body.location) listing.location = req.body.location;
     if (req.user) listing.userId = req.user.userId;
-
     store.addListing(listing);
 
     res.status(201).send(listing);
+    // await uploadFile(listing.images);
   }
 );
 

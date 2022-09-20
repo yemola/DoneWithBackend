@@ -1,4 +1,8 @@
 {
   "assetsBaseUrl": "http://192.168.43.59:9000/assets/",
-  "port": 9000
+  "port": 9000,
+  "aws-bucket-name": "donebucket1",
+  "aws-bucket-region": "eu-central-1",
+  "aws-access-key": "AKIATFLS4RXOWQNHX6CD",
+  "aws-secret-key": "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"
 }

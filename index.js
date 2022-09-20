@@ -28,6 +28,15 @@ app.use("/api/my", my);
 app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
 
+// app.post("/images", upload.single("image"), async (req, res) => {
+//   const file = req.file;
+//   console.log(file);
+//   const result = await uploadFile(file);
+//   console.log(result);
+//   const description = req.body.description;
+//   res.send("");
+// });
+
 const port = process.env.PORT || config.get("port");
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
