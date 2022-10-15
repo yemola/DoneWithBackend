@@ -1,7 +1,7 @@
-const config = require("config");
+require("dotenv").config();
 
 const mapper = (listing) => {
-  const baseUrl = config.get("assetsBaseUrl");
+  const baseUrl = process.env.ASSETS_BASE_URL;
   const mapImage = (image) => ({
     url: `${baseUrl}${image.fileName}_full.jpg`,
     thumbnailUrl: `${baseUrl}${image.fileName}_thumb.jpg`,
