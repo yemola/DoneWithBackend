@@ -1,63 +1,60 @@
 const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
-const { s3Uploadv2, getFileStream } = require("../routes/s3Service");
 
 const outputFolder = "public/assets";
 
 module.exports = async (req, res, next) => {
-  // const images = [];
-  const files = req.files;
-  console.log("files", files);
-  try {
-    const data = await s3Uploadv2(files);
-    console.log("1st data", data);
-    res.send({ message: "success" });
-  } catch (err) {
-    console.log(err);
-  }
+  const files = [];
 
-  req.images = data;
+  const resizePromises = req.files.map(async (file) => {
+    await sharp(file.path)
+      .resize(2000)
+      .jpeg({ quality: 50 })
+      .toFile(path.resolve(outputFolder, file.filename + "_full.jpg"));
 
-  // const images = [];
-  // const resizePromises = req.files.map(async (file) => {
-  //   await sharp(file.path)
-  //     .resize(2000)
-  //     .jpeg({ quality: 50 })
-  //     .then(() => {
-  //       const results = s3Uploadv2(req.files);
-  //       console.log("2nd result", results);
-  //       return res.send({ imagePath: `/${results.Key}` });
+    await sharp(file.path)
+      .resize(100)
+      .jpeg({ quality: 30 })
+      .toFile(path.resolve(outputFolder, file.filename + "_thumb.jpg"));
 
-  //       // const results = s3Uploadv2(req.files);
-  //       // console.log("results", results);
-  //       // return res.json({ status: "success" });
-  //     })
-  //     .catch((err) => console.warn(err));
+    // fs.unlinkSync(file.path);
 
-  //   await sharp(file.path)
-  //     .resize(100)
-  //     .jpeg({ quality: 30 })
-  //     .then(() => {
-  //       const results = s3Uploadv2(req.files);
-  //       console.log("3rd result", results);
-  //       return res.send({ imagePath: `/${results.Key}` });
-  //       // const results = s3Uploadv2(req.files);
-  //       // console.log("results", results);
-  //       // return res.json({ status: "success" });
-  //     })
-  //     .catch((err) => console.warn(err));
+    files.push(file);
+  });
 
-  //   fs.unlinkSync(file.path);
+  await Promise.all([...resizePromises]);
 
-  //   images.push(file.filename);
-  // });
-
-  // await Promise.all([...resizePromises]);
-
-  // req.images = images;
+  req.files = files;
+  console.log("images", files);
 
   next();
 };
 
-// `/${results.Key
+// module.exports = async (req, res, next) => {
+//   console.log("resize file", req.files);
+//   const files = [];
+
+//   const resizePromises = req.files.map(async (file) => {
+//     await sharp(file.buffer)
+//       .resize(2000)
+//       .jpeg({ quality: 50 })
+//       .toFile(path.resolve(outputFolder, file.originalname + "_full.jpg"));
+
+//     await sharp(file.buffer)
+//       .resize(100)
+//       .jpeg({ quality: 30 })
+//       .toFile(path.resolve(outputFolder, file.originalname + "_thumb.jpg"));
+
+//     fs.unlinkSync(file.buffer);
+
+//     files.push(file);
+//   });
+
+//   await Promise.all([...resizePromises]);
+
+//   req.files = files;
+//   console.log("resized files", files);
+
+//   next();
+// };

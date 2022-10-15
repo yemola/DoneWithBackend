@@ -4,7 +4,6 @@ const yup = require("yup");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
-const config = require("config");
 const validateWith = require("../middleware/validation");
 
 const schema = yup.object().shape({
@@ -19,7 +18,7 @@ router.post("/register", validateWith(schema), async (req, res) => {
     email: req.body.email,
     password: CryptoJS.AES.encrypt(
       req.body.password,
-      config.get("PASS_SEC")
+      process.env.PASS_SEC
     ).toString(),
   });
 
@@ -39,7 +38,7 @@ router.post("/register", validateWith(schema), async (req, res) => {
 
 //LOGIN
 
-router.get("/login", validateWith(schema), async (req, res) => {
+router.post("/login", validateWith(schema), async (req, res) => {
   const query1 = req.body.username;
   const query2 = req.body.email;
   try {
@@ -61,7 +60,7 @@ router.get("/login", validateWith(schema), async (req, res) => {
         id: user._id,
         isAdmin: user.isAdmin,
       },
-      config.get("JWT_SEC"),
+      process.env.JWT_SEC,
       { expiresIn: "5d" }
     );
 
@@ -69,7 +68,8 @@ router.get("/login", validateWith(schema), async (req, res) => {
 
     res.status(200).json({ ...others, accessToken });
   } catch (error) {
-    res.status(500).json(error);
+    console.log("error", error);
+    // res.status(500).json(error);
   }
 });
 

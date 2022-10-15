@@ -10,7 +10,7 @@ const ListingSchema = new mongoose.Schema(
     color: { type: Array },
     location: { type: Object },
     price: { type: Number, required: true },
-    userId: { type: String, required: true },
+    userId: { type: String },
     inStock: { type: Boolean, default: true },
   },
   { timestamps: true }

@@ -1,11 +1,13 @@
-const config = require("config");
-const fs = require("fs");
+const dotenv = require("dotenv");
 const { S3 } = require("aws-sdk");
+const uuid = require("uuid").v4;
+const fs = require("fs");
+dotenv.config();
 
-const bucketName = config.get("aws-bucket-name");
-const region = config.get("aws-bucket-region");
-const accessKeyId = config.get("aws-access-key");
-const secretAccessKey = config.get("aws-secret-key");
+const bucketName = process.env.AWS_BUCKET_NAME;
+const region = process.env.AWS_BUCKET_REGION;
+const accessKeyId = process.env.AWS_ACCESS_KEY;
+const secretAccessKey = process.env.AWS_SECRET_KEY;
 
 // uploads a file to s3
 
@@ -17,12 +19,11 @@ exports.s3Uploadv2 = async (files) => {
   });
 
   const params = files.map((file) => {
-    // const fileStream = fs.createReadStream(file.path);
+    const fileStream = fs.createReadStream(file.path);
     return {
       Bucket: bucketName,
-      Body: file.buffer,
-      Key: `${file.filename}`,
-      ACL: "public-read",
+      Body: fileStream,
+      Key: file.filename,
     };
   });
 
@@ -31,15 +32,17 @@ exports.s3Uploadv2 = async (files) => {
 
 // downloads a file from s3
 
-exports.getFileStream = async (imagePath) => {
-  const downloadParam = {
-    Key: imagePath,
-    Bucket: bucketName,
-  };
+// exports.getFileStream = async (imagePath) => {
+//   const downloadParam = {
+//     Key: imagePath,
+//     Bucket: bucketName,
+//   };
 
-  return s3.getObject(downloadParam).createReadStream();
-};
+//   return s3.getObject(downloadParam).createReadStream();
+// };
 
 // `${file.key}`
 
 // https://donebucket1.s3.eu-central-1.amazonaws.com/
+
+// `${uuid()}-${file.originalname}`

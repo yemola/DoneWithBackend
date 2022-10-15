@@ -1,6 +1,6 @@
 const express = require("express");
 const categories = require("./routes/categories");
-
+const dotenv = require("dotenv");
 const userRoute = require("./routes/user");
 const authRoute = require("./routes/auth");
 const listingsRoute = require("./routes/listings");
@@ -13,12 +13,16 @@ const messages = require("./routes/messages");
 const expoPushTokens = require("./routes/expoPushTokens");
 const helmet = require("helmet");
 const compression = require("compression");
-const config = require("config");
 const app = express();
 const mongoose = require("mongoose");
 const multer = require("multer");
+const cors = require("cors");
 
-const mongoUrl = config.get("mongoUrl");
+dotenv.config();
+
+app.use(cors());
+
+const mongoUrl = process.env.MONGO_URL;
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("DB Connected"))
@@ -67,7 +71,7 @@ app.use((error, req, res, next) => {
 //   res.send("");
 // });
 
-const port = config.get("port");
+const port = process.env.PORT;
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
 });
