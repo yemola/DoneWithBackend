@@ -23,19 +23,19 @@ router.post("/login", async (req, res) => {
       : await User.findOne({ name: query1 });
     !user && res.status(401).json("Wrong name or email!");
 
-    // const hashedPassword = CryptoJS.AES.decrypt(
-    //   user.password,
-    //   config.get("pass-sec")
-    // );
-    // const Originalpassword = hashedPassword.toString(CryptoJS.enc.Utf8);
-    // Originalpassword !== req.body.password &&
-    //   res.status(401).json("Wrong password!");
+    const hashedPassword = CryptoJS.AES.decrypt(
+      user.password,
+      process.env.PASS_SEC
+    );
+    const Originalpassword = hashedPassword.toString(CryptoJS.enc.Utf8);
+    Originalpassword !== req.body.password &&
+      res.status(401).json("Wrong password!");
 
     const token = jwt.sign(
       {
         userId: user._id,
       },
-      config.get("jwt-sec"),
+      process.env.JWT_SEC,
       { expiresIn: "5d" }
     );
 

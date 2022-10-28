@@ -3,10 +3,10 @@ const { S3 } = require("aws-sdk");
 const uuid = require("uuid").v4;
 const fs = require("fs");
 
-const bucketName = config.get("aws-bucket-name");
-const region = config.get("aws-bucket-region");
-const accessKeyId = config.get("aws-access-key");
-const secretAccessKey = config.get("aws-secret-key");
+const bucketName = process.env.AWS_BUCKET_NAME;
+const region = process.env.AWS_BUCKET_REGION;
+const accessKeyId = process.env.AWS_ACCESS_KEY;
+const secretAccessKey = process.env.AWS_SECRET_KEY;
 
 // uploads a file to s3
 
