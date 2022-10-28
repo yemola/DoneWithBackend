@@ -1,28 +1,34 @@
 const express = require("express");
+const app = express();
 const categories = require("./routes/categories");
-const dotenv = require("dotenv");
-const userRoute = require("./routes/user");
+const config = require("config");
+const usersRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
 const listingsRoute = require("./routes/listings");
 const cartRoute = require("./routes/cart");
 const orderRoute = require("./routes/order");
 const stripeRoute = require("./routes/stripe");
-// const user = require("./routes/user");
+const userRoute = require("./routes/user");
 const my = require("./routes/my");
 const messages = require("./routes/messages");
 const expoPushTokens = require("./routes/expoPushTokens");
 const helmet = require("helmet");
 const compression = require("compression");
-const app = express();
 const mongoose = require("mongoose");
-const multer = require("multer");
-const cors = require("cors");
 
-dotenv.config();
+const Joi = require("joi");
 
-app.use(cors());
+app.use((_, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
-const mongoUrl = process.env.MONGO_URL;
+const mongoUrl = config.get("mongoUrl");
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("DB Connected"))
@@ -33,8 +39,8 @@ app.use(express.json());
 app.use(helmet());
 app.use(compression());
 
-app.use(express.json());
-app.use("/api/users", userRoute);
+app.use("/api/user", userRoute);
+app.use("/api/users", usersRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/listings", listingsRoute);
 app.use("/api/carts", cartRoute);
@@ -47,31 +53,35 @@ app.use("/api/my", my);
 app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
 
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res.json({
-        message: "file is too large",
-      });
-    }
-    if (error.code === "LIMIT_FILE_COUNT") {
-      return res.json({
-        message: "too many files at once",
-      });
-    }
-  }
-});
-
-// app.post("/images", upload.single("image"), async (req, res) => {
-//   const file = req.file;
-//   console.log(file);
-//   const result = await uploadFile(file);
-//   console.log(result);
-//   const description = req.body.description;
-//   res.send("");
+// app.get("/api/genres", (req, res) => {
+//   res.send(genres);
 // });
 
-const port = process.env.PORT;
+// app.get("/api/genres/:id", (req, res) => {
+//   const genre = genres.find((g) => g.id === parseInt(req.params.id));
+//   if (!genre) return res.status(404).send("Genre with the given ID not found");
+//   res.status(200).send(genre);
+// });
+
+// app.post("/api/genres", (req, res) => {
+//   const schema = Joi.Object({
+//     genre: Joi.string().min(4).max(12).required(),
+//   });
+//   Joi.validate(req.body, schema);
+//   const genre = {
+//     id: genres.length + 1,
+//     name: req.body.name,
+//   };
+//   genres.push(genre);
+//   res.status(200).send(genre);
+// });
+
+// app.put("/api/genres", (req, res) => {
+//   const genre = genres.find((g) => g.id === parseInt(req.params.id));
+//   if (!genre) return res.status(404).send("Genre with the given ID not found");
+// });
+
+const port = config.get("port") || process.env.PORT;
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
 });

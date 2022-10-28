@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const config = require("config");
 
 const User = require("../models/User");
 const {
@@ -13,7 +14,7 @@ router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   if (req.body.password) {
     req.body.password = CryptoJS.AES.encrypt(
       req.body.password,
-      process.env.PASS_SEC
+      config.get("pass-sec")
     ).toString();
   }
 
