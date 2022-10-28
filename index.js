@@ -1,7 +1,8 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 const categories = require("./routes/categories");
-const config = require("config");
+// const config = require("config");
 const usersRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
 const listingsRoute = require("./routes/listings");
@@ -28,7 +29,7 @@ app.use((_, res, next) => {
   next();
 });
 
-const mongoUrl = config.get("mongoUrl");
+const mongoUrl = process.env.mongoUrl;
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("DB Connected"))

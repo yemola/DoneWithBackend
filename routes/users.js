@@ -16,7 +16,7 @@ router.post("/register", async (req, res) => {
     password: req.body.password,
     password: CryptoJS.AES.encrypt(
       req.body.password,
-      config.get("pass-sec")
+      process.env.PASS_SEC
     ).toString(),
   });
 

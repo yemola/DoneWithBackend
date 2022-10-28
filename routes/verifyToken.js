@@ -5,7 +5,7 @@ const verifyToken = (req, res, next) => {
   const authHeader = req.headers.token;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
-    jwt.verify(token, config.get("jwt-sec"), (err, user) => {
+    jwt.verify(token, process.env.JWT_SEC, (err, user) => {
       if (err) res.status(403).json("Token is not valid"); //ftoken is either expired or wrong
       req.user = user; //data is the response from jwt
       next();
