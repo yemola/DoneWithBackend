@@ -80,7 +80,7 @@ app.use("/api/messages", messages);
 //   if (!genre) return res.status(404).send("Genre with the given ID not found");
 // });
 
-const port = config.get("port") || process.env.PORT;
+const port = process.env.PORT;
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
 });
