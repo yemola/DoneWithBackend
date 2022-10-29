@@ -29,7 +29,7 @@ app.use((_, res, next) => {
   next();
 });
 
-const mongoUrl = process.env.mongoUrl;
+const mongoUrl = process.env.MONGO_URL;
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("DB Connected"))
