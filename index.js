@@ -17,8 +17,6 @@ const helmet = require("helmet");
 const compression = require("compression");
 const mongoose = require("mongoose");
 
-const Joi = require("joi");
-
 app.use((_, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
