@@ -4,16 +4,21 @@ const router = express.Router();
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const config = require("config");
-// const yup = require("yup");
+const yup = require("yup");
 // const usersStore = require("../store/users");
-// const validateWith = require("../middleware/validation");
+const validateWith = require("../middleware/validation");
+
+const schema = yup.object().shape({
+  name: yup.string().required().min(2),
+  email: yup.string().email().required(),
+  password: yup.string().required().min(5),
+});
 
 //REGISTER
-router.post("/register", async (req, res) => {
+router.post("/", validateWith(schema), async (req, res) => {
   const newUser = new User({
     name: req.body.name,
     email: req.body.email,
-    password: req.body.password,
     password: CryptoJS.AES.encrypt(
       req.body.password,
       process.env.PASS_SEC

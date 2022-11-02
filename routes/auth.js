@@ -1,20 +1,20 @@
 const express = require("express");
 const router = express.Router();
-// const yup = require("yup");
+const yup = require("yup");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
-// const validateWith = require("../middleware/validation");
+const validateWith = require("../middleware/validation");
 const config = require("config");
 
-// const schema = yup.object().shape({
-//   email: yup.string().email().required(),
-//   password: yup.string().required().min(5),
-// });
+const schema = yup.object().shape({
+  email: yup.string().email().required(),
+  password: yup.string().required().min(5),
+});
 
 //LOGIN
 
-router.post("/login", async (req, res) => {
+router.post("/", validateWith(schema), async (req, res) => {
   const query1 = req.body.name;
   const query2 = req.body.email;
   try {
@@ -31,17 +31,19 @@ router.post("/login", async (req, res) => {
     Originalpassword !== req.body.password &&
       res.status(401).json("Wrong password!");
 
+    const { password, ...others } = user._doc;
+
     const token = jwt.sign(
       {
         userId: user._id,
+        name: user.name,
+        email: user.email,
       },
       process.env.JWT_SEC,
       { expiresIn: "5d" }
     );
 
-    const { password, ...others } = user._doc;
-
-    res.status(200).json({ ...others, token });
+    res.status(200).json(token);
   } catch (error) {
     res.status(500).json(error);
   }

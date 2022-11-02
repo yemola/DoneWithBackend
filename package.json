@@ -16,6 +16,7 @@
     "aws-sdk": "^2.1223.0",
     "compression": "^1.7.4",
     "config": "^3.3.8",
+    "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.3",
     "expo-server-sdk": "^3.6.0",

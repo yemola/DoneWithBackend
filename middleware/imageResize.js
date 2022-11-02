@@ -26,7 +26,6 @@ module.exports = async (req, res, next) => {
   await Promise.all([...resizePromises]);
 
   req.files = files;
-  console.log("images", files);
 
   next();
 };
