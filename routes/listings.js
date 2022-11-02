@@ -42,10 +42,8 @@ const upload = multer({
 
 router.post("/", [upload.array("images"), imageResize], async (req, res) => {
   const files = req.files;
-  console.log("resized files", files);
 
   const data = await s3Uploadv2(files);
-  console.log("result in s3", data);
 
   const listing = new Listing({
     title: req.body.title,
@@ -59,7 +57,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
   });
 
   if (req.body.location) listing.location = JSON.parse(req.body.location);
-  // if (req.user) listing.userId = req.user.userId;
+  if (req.user) listing.userId = req.user.userId;
 
   listing
     .save()
@@ -68,6 +66,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
         _id: result._id,
         title: result.title,
         price: result.price,
+        userId: result.userId,
         description: result.description,
         images: data.map((image) => ({
           url: `${image.Location}`,
@@ -79,8 +78,6 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
       console.log("error", err);
       // return res.status(500).json(err);
     });
-
-  console.log("listing", listing);
   // return res.status(201).send(listing);
 });
 
@@ -140,7 +137,7 @@ router.get("/", async (req, res) => {
       });
     } else {
       items = await Listing.find();
-      console.log("items", items); // items to get
+      // console.log("items", items); // items to get
     }
     // const resources = items.map(listingMapper);
     res.status(200).json(items);

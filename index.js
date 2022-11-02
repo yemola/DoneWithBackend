@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 const express = require("express");
 const app = express();
 const categories = require("./routes/categories");
@@ -16,23 +17,25 @@ const expoPushTokens = require("./routes/expoPushTokens");
 const helmet = require("helmet");
 const compression = require("compression");
 const mongoose = require("mongoose");
+const { config } = require("dotenv");
 
-app.use((_, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
+// app.use((_, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*");
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, PUT, PATCH, DELETE"
+//   );
+//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   next();
+// });
 
-const mongoUrl = process.env.MONGO_URL;
+const mongoUrl = process.env.MONGO_URL || config.get("mongoUrl");
 mongoose
   .connect(mongoUrl)
   .then(() => console.log("DB Connected"))
   .catch((error) => console.log("error: ", error));
 
+app.use(cors());
 app.use(express.static("public"));
 app.use(express.json());
 app.use(helmet());
@@ -51,6 +54,11 @@ app.use("/api/categories", categories);
 app.use("/api/my", my);
 app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
+
+const port = process.env.PORT;
+app.listen(port, function () {
+  console.log(`Server started on port ${port}...`);
+});
 
 // app.get("/api/genres", (req, res) => {
 //   res.send(genres);
@@ -79,8 +87,3 @@ app.use("/api/messages", messages);
 //   const genre = genres.find((g) => g.id === parseInt(req.params.id));
 //   if (!genre) return res.status(404).send("Genre with the given ID not found");
 // });
-
-const port = process.env.PORT;
-app.listen(port, function () {
-  console.log(`Server started on port ${port}...`);
-});
