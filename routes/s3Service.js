@@ -10,6 +10,21 @@ const secretAccessKey = process.env.AWS_SECRET_KEY;
 
 // uploads a file to s3
 
+exports.s3UploadOne = async (file) => {
+  const s3 = new S3({
+    region,
+    accessKeyId,
+    secretAccessKey,
+  });
+
+  const param = {
+    Bucket: bucketName,
+    Body: fileStream,
+    Key: file.filename,
+  };
+  return await s3.upload(param).promise();
+};
+
 exports.s3Uploadv2 = async (files) => {
   const s3 = new S3({
     region,
@@ -27,6 +42,27 @@ exports.s3Uploadv2 = async (files) => {
   });
 
   return await Promise.all(params.map((param) => s3.upload(param).promise()));
+};
+
+exports.s3Deletev2 = async (files) => {
+  const s3 = new S3({
+    region,
+    accessKeyId,
+    secretAccessKey,
+  });
+
+  const params = files.map((file) => {
+    const fileStream = fs.createReadStream(file.path);
+    return {
+      Bucket: bucketName,
+      Body: fileStream,
+      Key: file.filename,
+    };
+  });
+
+  return await Promise.all(
+    params.map((param) => s3.deleteObject(param).promise())
+  );
 };
 
 // downloads a file from s3

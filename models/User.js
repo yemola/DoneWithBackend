@@ -5,11 +5,12 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    image: { type: Array },
     isAdmin: {
       type: Boolean,
       default: false,
     },
-    image: { type: String },
+    expoPushToken: { type: String },
   },
   { timestamps: true }
 );
