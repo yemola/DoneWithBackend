@@ -3,7 +3,6 @@ const router = express.Router();
 const Listing = require("../models/Listing");
 const imageResize = require("../middleware/imageResize");
 const multer = require("multer");
-const listingMapper = require("../mappers/listings");
 const { s3Uploadv2, s3Deletev2 } = require("./s3Service");
 const auth = require("../middleware/auth");
 
