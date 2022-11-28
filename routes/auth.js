@@ -38,6 +38,9 @@ router.post("/", validateWith(schema), async (req, res) => {
         userId: user._id,
         name: user.name,
         email: user.email,
+        image: user.image,
+        isAdmin: user.isAdmin,
+        expoPushToken: user.expoPushToken,
       },
       process.env.JWT_SEC,
       { expiresIn: "5d" }

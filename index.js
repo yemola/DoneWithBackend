@@ -1,6 +1,7 @@
 require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
+const multer = require("multer");
 const app = express();
 const categories = require("./routes/categories");
 // const config = require("config");
@@ -13,21 +14,10 @@ const stripeRoute = require("./routes/stripe");
 const userRoute = require("./routes/user");
 const my = require("./routes/my");
 const messages = require("./routes/messages");
-const expoPushTokens = require("./routes/expoPushTokens");
 const helmet = require("helmet");
 const compression = require("compression");
 const mongoose = require("mongoose");
 const { config } = require("dotenv");
-
-// app.use((_, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "GET, POST, PUT, PATCH, DELETE"
-//   );
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   next();
-// });
 
 const mongoUrl = process.env.MONGO_URL || config.get("mongoUrl");
 mongoose
@@ -52,38 +42,24 @@ app.use("/api/checkout", stripeRoute);
 app.use("/api/categories", categories);
 
 app.use("/api/my", my);
-app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.json({
+        message: "file is too large",
+      });
+    }
+    if (error.code === "LIMIT_FILE_COUNT") {
+      return res.json({
+        message: "too many files at once",
+      });
+    }
+  }
+});
 
 const port = process.env.PORT;
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
 });
-
-// app.get("/api/genres", (req, res) => {
-//   res.send(genres);
-// });
-
-// app.get("/api/genres/:id", (req, res) => {
-//   const genre = genres.find((g) => g.id === parseInt(req.params.id));
-//   if (!genre) return res.status(404).send("Genre with the given ID not found");
-//   res.status(200).send(genre);
-// });
-
-// app.post("/api/genres", (req, res) => {
-//   const schema = Joi.Object({
-//     genre: Joi.string().min(4).max(12).required(),
-//   });
-//   Joi.validate(req.body, schema);
-//   const genre = {
-//     id: genres.length + 1,
-//     name: req.body.name,
-//   };
-//   genres.push(genre);
-//   res.status(200).send(genre);
-// });
-
-// app.put("/api/genres", (req, res) => {
-//   const genre = genres.find((g) => g.id === parseInt(req.params.id));
-//   if (!genre) return res.status(404).send("Genre with the given ID not found");
-// });

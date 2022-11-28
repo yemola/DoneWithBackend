@@ -4,19 +4,14 @@ const Listing = require("../models/Listing");
 const imageResize = require("../middleware/imageResize");
 const multer = require("multer");
 const listingMapper = require("../mappers/listings");
-const { s3Uploadv2, getFileStream } = require("./s3Service");
+const { s3Uploadv2, s3Deletev2 } = require("./s3Service");
+const auth = require("../middleware/auth");
 
 const {
   verifyToken,
   verifyTokenAndAuthorization,
   verifyTokenAndAdmin,
 } = require("./verifyToken");
-
-// const storage = multer.memoryStorage({
-//   destination: function (req, file, callback) {
-//     callback(null, "");
-//   },
-// });
 
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.split("/")[0] === "image") {
@@ -32,12 +27,6 @@ const upload = multer({
   limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 5 },
 });
 
-// const upload = multer({
-//   storage,
-//   filefilter,
-//   limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 5 },
-// });
-
 //CREATE
 
 router.post("/", [upload.array("images"), imageResize], async (req, res) => {
@@ -50,6 +39,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
     price: parseFloat(req.body.price),
     categoryId: parseInt(req.body.categoryId),
     description: req.body.description,
+    userId: req.body.userId,
     images: data.map((image) => ({
       url: `${image.Location}`,
       thumbnailUrl: `${image.Location}`,
@@ -57,7 +47,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
   });
 
   if (req.body.location) listing.location = JSON.parse(req.body.location);
-  if (req.user) listing.userId = req.user.userId;
+  // if (req.user) listing.userId = req.user.userId;
 
   listing
     .save()
@@ -99,8 +89,13 @@ router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
 
 //DELETE
 
-router.delete("/:id", verifyTokenAndAdmin, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
+  // const files = req.files;
+  // console.log("files to delete: ", files);
+
   try {
+    // await s3Deletev2(files);
+    // console.log("s3Delete: ", s3Deletev2(files));
     await Listing.findByIdAndDelete(req.params.id);
     res.status(200).json("Product has been deleted...");
   } catch (err) {
@@ -118,6 +113,17 @@ router.get("/:id", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+//GET MY PRODUCTs
+
+// router.get("/:userId", auth, async (req, res) => {
+//   let user = req.user;
+//   console.log("listings' user", user);
+//   const listings = await Listing.find();
+//   listings.filter((listing) => listing.userId === req.user.userId);
+//   // const resources = listings.map(listingMapper);
+//   res.send(resources);
+// });
 
 //GET ALL PRODUCTS
 
@@ -139,7 +145,6 @@ router.get("/", async (req, res) => {
       items = await Listing.find();
       // console.log("items", items); // items to get
     }
-    // const resources = items.map(listingMapper);
     res.status(200).json(items);
   } catch (err) {
     console.log("resource error", err);
