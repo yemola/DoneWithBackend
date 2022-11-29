@@ -1,14 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const imageResize = require("../middleware/imageResize");
-const { s3Uploadv2 } = require("./s3Service");
+const { s3UploadOne } = require("./s3Service");
 
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const config = require("config");
 const yup = require("yup");
-// const usersStore = require("../store/users");
 const validateWith = require("../middleware/validation");
 
 const schema = yup.object().shape({
@@ -67,7 +65,7 @@ router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
 
 router.put(
   "/:id",
-  [verifyTokenAndAuthorization, upload.array("image"), imageResize],
+  [verifyTokenAndAuthorization, upload.single("image")],
   async (req, res) => {
     if (req.body.password) {
       req.body.password = CryptoJS.AES.encrypt(
@@ -76,14 +74,14 @@ router.put(
       ).toString();
     }
 
-    const files = req.files;
+    const file = req.file;
+    const data = await s3UploadOne(file);
 
-    const data = await s3Uploadv2(files);
-
-    const newImage = data.map((image) => ({
-      url: `${image.Location}`,
-      thumbnailUrl: `${image.Location}`,
-    }));
+    const newImage = data.Location;
+    // map((image) => ({
+    //   url: `${image.Location}`,
+    //   thumbnailUrl: `${image.Location}`,
+    // }));
 
     result = await User.findById(req.params.id);
 
@@ -191,24 +189,3 @@ router.post("/", validateWith(schema), async (req, res) => {
 });
 
 module.exports = router;
-
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "/pictures/profile-pix");
-//   },
-//   filename: (req, file, cb) => {
-//     const { originalname } = file;
-//     cb(null, originalname);
-//   },
-// });
-
-// const fileFilter = (req, file, cb) => {
-//   if (file.mimetype.split("/") === "image") {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("file is not of the correct type"), false);
-//   }
-// };
-
-// const upload = multer({ storage, fileFilter, limits: { fileSize: 1000000 } });
-// upload.single("image"),

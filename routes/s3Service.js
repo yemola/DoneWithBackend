@@ -16,7 +16,7 @@ exports.s3UploadOne = async (file) => {
     accessKeyId,
     secretAccessKey,
   });
-
+  const fileStream = fs.createReadStream(file.path);
   const param = {
     Bucket: bucketName,
     Body: fileStream,
