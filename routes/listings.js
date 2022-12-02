@@ -39,6 +39,11 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
     categoryId: parseInt(req.body.categoryId),
     description: req.body.description,
     userId: req.body.userId,
+    userImg: req.body.userImg,
+    username: req.body.username,
+    state: req.body.state,
+    country: req.body.country,
+    whatsapp: req.body.whatsapp,
     images: data.map((image) => ({
       url: `${image.Location}`,
       thumbnailUrl: `${image.Location}`,
@@ -99,6 +104,20 @@ router.delete("/:id", verifyToken, async (req, res) => {
     res.status(200).json("Product has been deleted...");
   } catch (err) {
     res.status(500).json(err);
+  }
+});
+
+//DELETING SOME LISTINGS
+
+router.delete("/", verifyTokenAndAuthorization, async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    let allListing = await Listing.find();
+    let myListings = allListing.filter((listing) => listing.userId === userId);
+
+    myListings.forEach((listing) => Listing.findByIdAndDelete(listing._id));
+  } catch (error) {
+    console.log("listings deletion failed");
   }
 });
 

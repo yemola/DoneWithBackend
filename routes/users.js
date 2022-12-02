@@ -10,7 +10,7 @@ const yup = require("yup");
 const validateWith = require("../middleware/validation");
 
 const schema = yup.object().shape({
-  name: yup.string().required().min(2),
+  username: yup.string().required().min(2),
   email: yup.string().email().required(),
   password: yup.string().required().min(5),
 });
@@ -35,6 +35,31 @@ const upload = multer({
   limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 5 },
 });
 
+//REGISTER
+router.post("/", async (req, res) => {
+  let savedUser;
+  let newUser = new User({
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
+    username: req.body.username,
+    email: req.body.email,
+    city: req.body.city,
+    state: req.body.state,
+    country: req.body.country,
+    whatsapp: req.body.whatsapp,
+    password: CryptoJS.AES.encrypt(
+      req.body.password,
+      process.env.PASS_SEC
+    ).toString(),
+  });
+  try {
+    savedUser = await newUser.save();
+    res.status(201).send(savedUser);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 //UPDATE
 router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
   if (req.body.password) {
@@ -48,7 +73,13 @@ router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       {
-        name: req.body.name,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        username: req.body.username,
+        city: req.body.city,
+        state: req.body.state,
+        country: req.body.country,
+        whatsapp: req.body.whatsapp,
         password: req.body.password,
         image: req.body.image,
         isAdmin: req.body.isAdmin,
@@ -78,10 +109,6 @@ router.put(
     const data = await s3UploadOne(file);
 
     const newImage = data.Location;
-    // map((image) => ({
-    //   url: `${image.Location}`,
-    //   thumbnailUrl: `${image.Location}`,
-    // }));
 
     result = await User.findById(req.params.id);
 
@@ -89,7 +116,13 @@ router.put(
       const updatedUser = await User.findByIdAndUpdate(
         req.params.id,
         {
-          name: req.body.name,
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          username: req.body.username,
+          city: req.body.city,
+          state: req.body.state,
+          country: req.body.country,
+          whatsapp: req.body.whatsapp,
           password: req.body.password,
           image: newImage,
           isAdmin: req.body.isAdmin,
@@ -164,25 +197,6 @@ router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
       },
     ]);
     res.status(200).json(data);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
-//REGISTER
-router.post("/", validateWith(schema), async (req, res) => {
-  const newUser = new User({
-    name: req.body.name,
-    email: req.body.email,
-    password: CryptoJS.AES.encrypt(
-      req.body.password,
-      process.env.PASS_SEC
-    ).toString(),
-  });
-
-  try {
-    const user = await newUser.save();
-    res.status(201).json(user);
   } catch (err) {
     res.status(500).json(err);
   }

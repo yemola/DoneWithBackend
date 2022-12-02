@@ -11,6 +11,11 @@ const ListingSchema = new mongoose.Schema(
     location: { type: Object },
     price: { type: Number, required: true },
     userId: { type: String },
+    userImg: { type: String },
+    username: { type: String },
+    state: { type: String },
+    country: { type: String },
+    whatsapp: { type: String },
     inStock: { type: Boolean, default: true },
   },
   { timestamps: true }
