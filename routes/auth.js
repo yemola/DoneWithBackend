@@ -15,13 +15,13 @@ const schema = yup.object().shape({
 //LOGIN
 
 router.post("/", validateWith(schema), async (req, res) => {
-  const query1 = req.body.name;
+  const query1 = req.body.username;
   const query2 = req.body.email;
   try {
     const user = query2
       ? await User.findOne({ email: query2 })
-      : await User.findOne({ name: query1 });
-    !user && res.status(401).json("Wrong name or email!");
+      : await User.findOne({ username: query1 });
+    !user && res.status(401).json("Wrong username or email!");
 
     const hashedPassword = CryptoJS.AES.decrypt(
       user.password,
@@ -35,9 +35,15 @@ router.post("/", validateWith(schema), async (req, res) => {
 
     const token = jwt.sign(
       {
+        firstname: user.firstname,
+        lastname: user.lastname,
         userId: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
+        city: user.city,
+        state: user.state,
+        country: user.country,
+        whatsapp: user.whatsapp,
         image: user.image,
         isAdmin: user.isAdmin,
         expoPushToken: user.expoPushToken,
