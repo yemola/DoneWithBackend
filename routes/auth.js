@@ -51,10 +51,10 @@ router.post("/", validateWith(schema), async (req, res) => {
       process.env.JWT_SEC,
       { expiresIn: "5d" }
     );
-
     res.status(200).json(token);
   } catch (error) {
-    res.status(500).json(error);
+    console.log("error logging in :", error);
+    // res.status(500).json(error);
   }
 });
 

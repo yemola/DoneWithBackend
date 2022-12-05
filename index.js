@@ -7,7 +7,6 @@ const categories = require("./routes/categories");
 const usersRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
 const listingsRoute = require("./routes/listings");
-const cartRoute = require("./routes/cart");
 const orderRoute = require("./routes/order");
 const stripeRoute = require("./routes/stripe");
 const my = require("./routes/my");
@@ -32,7 +31,6 @@ app.use(compression());
 app.use("/api/users", usersRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/listings", listingsRoute);
-app.use("/api/carts", cartRoute);
 app.use("/api/orders", orderRoute);
 app.use("/api/checkout", stripeRoute);
 
