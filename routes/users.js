@@ -36,8 +36,7 @@ const upload = multer({
 });
 
 //REGISTER
-router.post("/", async (req, res) => {
-  let savedUser;
+router.post("/", validateWith(schema), async (req, res) => {
   let newUser = new User({
     firstname: req.body.firstname,
     lastname: req.body.lastname,
@@ -52,8 +51,9 @@ router.post("/", async (req, res) => {
       process.env.PASS_SEC
     ).toString(),
   });
+  console.log("newUser: ", newUser);
   try {
-    savedUser = await newUser.save();
+    const savedUser = await newUser.save();
     res.status(201).send(savedUser);
   } catch (err) {
     res.status(500).json(err);
@@ -142,7 +142,8 @@ router.put(
 
 router.delete("/:id", verifyTokenAndAuthorization, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
+    const userId = req.body.userId;
+    await User.findByIdAndDelete(userId);
     res.status(200).json("User has been deleted...");
   } catch (err) {
     res.status(500).json(err);
@@ -163,15 +164,16 @@ router.get("/:id", verifyToken, async (req, res) => {
 
 //GET ALL USER
 
-router.get("/", verifyTokenAndAdmin, async (req, res) => {
+router.get("/", verifyToken, async (req, res) => {
   const query = req.query.new;
   try {
     const users = query
-      ? await User.find().sort({ _id: -1 }).limit(5)
+      ? await User.find().sort({ _id: -1 })
       : await User.find();
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json(err);
+    console.log("users: ", users);
+    // res.status(500).json(err);
   }
 });
 

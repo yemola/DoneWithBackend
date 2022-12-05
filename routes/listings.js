@@ -51,7 +51,6 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
   });
 
   if (req.body.location) listing.location = JSON.parse(req.body.location);
-  // if (req.user) listing.userId = req.user.userId;
 
   listing
     .save()
@@ -115,7 +114,10 @@ router.delete("/", verifyTokenAndAuthorization, async (req, res) => {
     let allListing = await Listing.find();
     let myListings = allListing.filter((listing) => listing.userId === userId);
 
-    myListings.forEach((listing) => Listing.findByIdAndDelete(listing._id));
+    await myListings.forEach((listing) =>
+      Listing.findByIdAndDelete(listing._id)
+    );
+    console.log("successfully deleted");
   } catch (error) {
     console.log("listings deletion failed");
   }
