@@ -10,9 +10,16 @@ const yup = require("yup");
 const validateWith = require("../middleware/validation");
 
 const schema = yup.object().shape({
-  username: yup.string().required().min(2),
-  email: yup.string().email().required(),
-  password: yup.string().required().min(5),
+  firstname: yup.string().required().label("First Name"),
+  lastname: yup.string().required().label("Last Name"),
+  username: yup.string().required().label("Username"),
+  city: yup.string().label("City"),
+  state: yup.string().required().label("State"),
+  country: yup.string().required().label("Country"),
+  countryCode: yup.string().label("Country Code"),
+  email: yup.string().required().email().label("Email"),
+  password: yup.string().required().min(4).label("Password"),
+  whatsapp: yup.string().label("WhatsApp Number"),
 });
 
 const {
@@ -45,6 +52,7 @@ router.post("/", validateWith(schema), async (req, res) => {
     city: req.body.city,
     state: req.body.state,
     country: req.body.country,
+    countryCode: req.body.countryCode,
     whatsapp: req.body.whatsapp,
     password: CryptoJS.AES.encrypt(
       req.body.password,
@@ -53,10 +61,16 @@ router.post("/", validateWith(schema), async (req, res) => {
   });
   console.log("newUser: ", newUser);
   try {
+    let checkedEmail = await User.findOne({ email: req.body.email });
+    if (checkedEmail)
+      return res
+        .status(401)
+        .json("Email already registered. Use another email address");
     const savedUser = await newUser.save();
-    res.status(201).send(savedUser);
+    res.status(201).json(savedUser);
   } catch (err) {
-    res.status(500).json(err);
+    console.log("error: ", err);
+    // res.status(500).json(err);
   }
 });
 
@@ -79,6 +93,7 @@ router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
         city: req.body.city,
         state: req.body.state,
         country: req.body.country,
+        countryCode: req.body.countryCode,
         whatsapp: req.body.whatsapp,
         password: req.body.password,
         image: req.body.image,
@@ -122,6 +137,7 @@ router.put(
           city: req.body.city,
           state: req.body.state,
           country: req.body.country,
+          countryCode: req.body.countryCode,
           whatsapp: req.body.whatsapp,
           password: req.body.password,
           image: newImage,
