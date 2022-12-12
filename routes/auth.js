@@ -43,6 +43,7 @@ router.post("/", validateWith(schema), async (req, res) => {
         city: user.city,
         state: user.state,
         country: user.country,
+        countryCode: user.countryCode,
         whatsapp: user.whatsapp,
         image: user.image,
         isAdmin: user.isAdmin,

@@ -35,7 +35,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
 
   const listing = new Listing({
     title: req.body.title,
-    price: parseFloat(req.body.price),
+    price: req.body.price,
     categoryId: parseInt(req.body.categoryId),
     description: req.body.description,
     userId: req.body.userId,
@@ -43,6 +43,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
     username: req.body.username,
     state: req.body.state,
     country: req.body.country,
+    countryCode: req.body.countryCode,
     whatsapp: req.body.whatsapp,
     images: data.map((image) => ({
       url: `${image.Location}`,
