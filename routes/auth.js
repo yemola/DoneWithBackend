@@ -22,7 +22,7 @@ router.post("/", validateWith(schema), async (req, res) => {
       ? await User.findOne({ email: query2 })
       : await User.findOne({ username: query1 });
     !user && res.status(401).json("Wrong username or email!");
-
+    if (!user && !req.body.password) return;
     const hashedPassword = CryptoJS.AES.decrypt(
       user.password,
       process.env.PASS_SEC
