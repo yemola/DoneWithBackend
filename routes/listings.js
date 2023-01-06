@@ -91,7 +91,7 @@ router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
   }
 });
 
-//DELETE
+//DELETE A LISTING
 
 router.delete("/:id", verifyToken, async (req, res) => {
   // const files = req.files;
@@ -109,18 +109,19 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
 //DELETING SOME LISTINGS
 
-router.delete("/", verifyTokenAndAuthorization, async (req, res) => {
-  try {
-    const userId = req.body.userId;
-    let allListing = await Listing.find();
-    let myListings = allListing.filter((listing) => listing.userId === userId);
+router.delete("/deleteListings", verifyToken, async (req, res) => {
+  console.log("reqquery: ", req.query);
+  const user = JSON.parse(req.query.user);
+  const userId = user.userId;
+  console.log("userId todelete: ", userId);
 
-    await myListings.forEach((listing) =>
-      Listing.findByIdAndDelete(listing._id)
-    );
-    console.log("successfully deleted");
+  try {
+    for (let listing of myListings) {
+      await Listing.findByIdAndDelete(listing._id);
+    }
+    console.log("successfully deleted", res.data);
   } catch (error) {
-    console.log("listings deletion failed");
+    console.log("listings deletion failed", error);
   }
 });
 
@@ -137,14 +138,31 @@ router.get("/:id", async (req, res) => {
 
 //GET MY PRODUCTs
 
-// router.get("/:userId", auth, async (req, res) => {
-//   let user = req.user;
-//   console.log("listings' user", user);
-//   const listings = await Listing.find();
-//   listings.filter((listing) => listing.userId === req.user.userId);
-//   // const resources = listings.map(listingMapper);
+// router.post("/mylistings", async (req, res) => {
+//   console.log("reqbodyMY: ", req.body);
+//   let { userId } = req.body;
+//   const myListings = await Listing.find({ userId });
+//   console.log("myListings: ", myListings);
 //   res.send(resources);
 // });
+
+router.post("/getSum", async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const myListings = await Listing.find({ userId });
+    const myListingsSum = myListings.length;
+    console.log("listingSum: ", myListingsSum);
+    res.json({
+      status: "SUCCESS",
+      message: "Total items sent",
+      data: {
+        myListingsSum,
+      },
+    });
+  } catch (error) {
+    console.log("error getting sum of listing: ", error);
+  }
+});
 
 //GET ALL PRODUCTS
 

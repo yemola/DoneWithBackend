@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ListingSchema = new mongoose.Schema(
+const DeletedListingSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, unique: true },
     description: { type: String },
@@ -22,4 +22,4 @@ const ListingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Listing", ListingSchema);
+module.exports = mongoose.model("DeletedListing", DeletedListingSchema);

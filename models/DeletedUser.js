@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema(
+const DeletedUserSchema = new mongoose.Schema(
   {
     firstname: { type: String, required: true },
     lastname: { type: String, required: true },
@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema(
     state: { type: String, required: true },
     country: { type: String, required: true },
     countryCode: { type: Object, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
     password: { type: String, required: true },
     whatsapp: { type: String },
     image: { type: Object },
@@ -26,4 +26,4 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("DeletedUser", DeletedUserSchema);
