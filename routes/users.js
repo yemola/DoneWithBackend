@@ -39,14 +39,14 @@ let transporter = nodemailer.createTransport({
 });
 
 // Testing Success
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("Verification error: ", error);
-  } else {
-    console.log("Ready for messages");
-    console.log("Success");
-  }
-});
+// transporter.verify((error, success) => {
+//   if (error) {
+//     console.log("Verification error: ", error);
+//   } else {
+//     console.log("Ready for messages");
+
+//   }
+// });
 const {
   verifyToken,
   verifyTokenAndAuthorization,
@@ -91,16 +91,17 @@ router.post("/", validateWith(schema), async (req, res) => {
       return res
         .status(401)
         .json("Email already registered. Use another email address");
-    // const savedUser =
-    await newUser.save().then((savedUser) => {
-      // Handle account verification
-      // sendVerificationEmail(savedUser, res);
-      sendOTPMail(savedUser, res);
-    });
+
+    const savedUser = await newUser.save();
+    res.status(201).json(savedUser);
+    // => {
+    // Handle account verification
+    // sendVerificationEmail(savedUser, res);
+    // sendOTPMail(savedUser, res);
+    // });
     // res.status(201).json(savedUser);
   } catch (err) {
-    console.log("error: ", err);
-    // res.status(500).json(err);
+    res.status(500).json(err);
   }
 });
 
@@ -178,12 +179,14 @@ router.post("/", validateWith(schema), async (req, res) => {
 router.post("/verifyEmail", async (req, res) => {
   try {
     const userEmail = req.body.email;
+
     let user = await User.findOne({ email: userEmail });
+
     const { _id, email } = user;
 
     sendOTPMail({ _id, email }, res);
   } catch (error) {
-    console.log("Error: ", error);
+    res.status(400).json(error);
   }
 });
 
@@ -191,7 +194,6 @@ router.post("/verifyEmail", async (req, res) => {
 const sendOTPMail = async ({ _id, email }, res) => {
   try {
     const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
-    console.log("otp: ", otp);
 
     // Mail options
     const mailOptions = {
@@ -226,7 +228,6 @@ const sendOTPMail = async ({ _id, email }, res) => {
       },
     });
   } catch (error) {
-    console.log("Email error: ", error);
     res.json({
       status: "FAILED",
       message: error.message,
@@ -284,7 +285,6 @@ router.post("/verifyOTP", async (req, res) => {
 // resend verification
 router.post("/resendOTP", async (req, res) => {
   try {
-    console.log("resend reqBody: ", req.body);
     let { userId, email } = req.body;
 
     if (!userId || !email) {
@@ -305,9 +305,7 @@ router.post("/resendOTP", async (req, res) => {
 // update password
 router.put("/resetPassword/:id", async (req, res) => {
   try {
-    console.log("reqBody: ", req.body);
     const { password, userId } = req.body;
-    console.log("userIdNewPassword: ", userId, password);
     const user = await User.findOne({ _id: userId });
     const updatedUser = await User.findByIdAndUpdate(
       { _id: userId },
@@ -334,8 +332,6 @@ router.put("/resetPassword/:id", async (req, res) => {
 
     res.status(200).send(updatedUser);
   } catch (error) {
-    console.log("Error updating password: ", error);
-
     res.json({
       status: "FAILED",
       message: error.message,
@@ -430,7 +426,7 @@ router.post("/deleteUserAccount", async (req, res) => {
   const { userId } = req.body;
 
   try {
-    const user = await User.findOne({ _id: userId });
+    let user = await User.findOne({ _id: userId });
 
     if (!user) res.json("User already deleted");
     let newDelete = new DeletedUser({
@@ -450,12 +446,11 @@ router.post("/deleteUserAccount", async (req, res) => {
       expoPushToken: user.expoPushToken,
     });
     const deletedUser = await newDelete.save();
-    console.log("deletedUser: ", deletedUser);
 
     const response = await Listing.deleteMany({ userId });
-    response === "null"
-      ? console.log("listings deleted")
-      : console.log("not deleted: ", response.problem);
+    // response === "null"
+    //   ? console.log("listings deleted")
+    //   : console.log("not deleted: ", response.problem);
 
     const result = await User.findByIdAndDelete(userId);
     if (result === "null")
@@ -464,7 +459,7 @@ router.post("/deleteUserAccount", async (req, res) => {
         message: "User account deleted.",
       });
   } catch (error) {
-    console.log("error deleting user: ", error);
+    res.status(400).json(error);
   }
 });
 
@@ -473,7 +468,7 @@ router.post("/deleteUserAccount", async (req, res) => {
 router.delete("/:id", verifyTokenAndAuthorization, async (req, res) => {
   try {
     const userId = req.body.userId;
-    console.log("user Id: ", userId);
+
     await User.findByIdAndDelete(userId);
     res.status(200).json("User has been deleted...");
   } catch (err) {
@@ -503,8 +498,7 @@ router.get("/", verifyToken, async (req, res) => {
       : await User.find();
     res.status(200).json(users);
   } catch (err) {
-    console.log("users: ", users);
-    // res.status(500).json(err);
+    res.status(500).json(err);
   }
 });
 

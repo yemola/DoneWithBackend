@@ -69,8 +69,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
       });
     })
     .catch((err) => {
-      console.log("error", err);
-      // return res.status(500).json(err);
+      res.status(500).json(err);
     });
   // return res.status(201).send(listing);
 });
@@ -110,18 +109,16 @@ router.delete("/:id", verifyToken, async (req, res) => {
 //DELETING SOME LISTINGS
 
 router.delete("/deleteListings", verifyToken, async (req, res) => {
-  console.log("reqquery: ", req.query);
   const user = JSON.parse(req.query.user);
   const userId = user.userId;
-  console.log("userId todelete: ", userId);
 
   try {
     for (let listing of myListings) {
       await Listing.findByIdAndDelete(listing._id);
     }
-    console.log("successfully deleted", res.data);
+    res.status(200).json("Successfully deleted");
   } catch (error) {
-    console.log("listings deletion failed", error);
+    res.status(400).json("listings deletion failed", error);
   }
 });
 
@@ -151,7 +148,7 @@ router.post("/getSum", async (req, res) => {
     const userId = req.body.userId;
     const myListings = await Listing.find({ userId });
     const myListingsSum = myListings.length;
-    console.log("listingSum: ", myListingsSum);
+
     res.json({
       status: "SUCCESS",
       message: "Total items sent",
@@ -160,7 +157,7 @@ router.post("/getSum", async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("error getting sum of listing: ", error);
+    res.status(400).json(error);
   }
 });
 
@@ -186,8 +183,7 @@ router.get("/", async (req, res) => {
     }
     res.status(200).json(items);
   } catch (err) {
-    console.log("resource error", err);
-    // res.status(500).json(err);
+    res.status(500).json(err);
   }
 });
 
