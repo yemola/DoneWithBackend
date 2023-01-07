@@ -7,7 +7,7 @@ function validateWith(schema) {
         return res.status(400).send({ error: result.error.details[0].message });
       next();
     } catch (error) {
-      console.log(error);
+      res.status(400).json(error);
     }
   };
 }

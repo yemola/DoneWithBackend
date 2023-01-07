@@ -6,7 +6,6 @@ const auth = require("../middleware/auth");
 
 router.get("/listings", auth, async (req, res) => {
   let user = req.user;
-  console.log("listings' user", user);
   const listings = await Listing.find();
   listings.filter((listing) => listing.userId === req.user.userId);
 

@@ -20,7 +20,7 @@ router.get("/", auth, async (req, res) => {
     const resources = await Messages.find();
     res.status(200).send(resources);
   } catch (error) {
-    console.log("error fetch messages from db: ", error);
+    res.status(400).json(error);
   }
 });
 
