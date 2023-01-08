@@ -29,6 +29,10 @@ const schema = yup.object().shape({
   whatsapp: yup.string().label("WhatsApp Number"),
 });
 
+const emailSchema = yup.object().shape({
+  email: yup.string().required().email().label("Email"),
+});
+
 // Nodemailer Transporter
 let transporter = nodemailer.createTransport({
   service: "gmail",
@@ -38,15 +42,14 @@ let transporter = nodemailer.createTransport({
   },
 });
 
-// Testing Success
-// transporter.verify((error, success) => {
-//   if (error) {
-//     console.log("Verification error: ", error);
-//   } else {
-//     console.log("Ready for messages");
-
-//   }
-// });
+//Testing Success
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("Verification error: ", error);
+  } else {
+    console.log("Ready for messages");
+  }
+});
 const {
   verifyToken,
   verifyTokenAndAuthorization,
@@ -105,89 +108,26 @@ router.post("/", validateWith(schema), async (req, res) => {
   }
 });
 
-// // Send verification email
-// const sendVerificationEmail = ({ _id, email }) => {
-//   // url to be used in the email
-//   const currentUrl = "http://192.168.43.60:9001/";
-
-//   const uniqueString = uuidv4() + _id;
-
-//   // mail options
-//   const mailOptions = {
-//     from: process.env.AUTH_EMAIL,
-//     to: email,
-//     subject: "Verify Your Email",
-//     html: `<p>Please verify your email address to complete the signup and login into your account.</p> <p>This link <b>expires in 6 hours</b>.</p> <p>Press <a href=${
-//       currentUrl + "user/verify/" + _id + "/" + uniqueString
-//     }>here</a> to proceed.</p>`,
-//   };
-
-//   // hash the uniqueString
-//   const hashedUniqueString = CryptoJS.AES.encrypt(
-//     uniqueString,
-//     process.env.PASS_SEC
-//   ).toString();
-
-//   const newVerification = new UserVerification({
-//     userId: _id,
-//     uniqueString: hashedUniqueString,
-//     createdAt: Date.now(),
-//     expiresAt: Date.now() + 21600000,
-//   });
-
-//   newVerification
-//     .save()
-//     .then(() => {
-//       transporter
-//         .sendMail(mailOptions)
-//         .then(() => {
-//           res.json({
-//             status: "PENDING",
-//             message: "Verification email sent",
-//           });
-//         })
-//         .catch((error) => {
-//           console.log(error);
-//           res.json({
-//             status: "FAILED",
-//             message: "Verification email failed",
-//           });
-//         });
-//     })
-//     .then()
-//     .catch((error) => {
-//       console.log(error);
-//       res.json({
-//         status: "FAILED",
-//         message: "Couldn't save verification email data!",
-//       });
-//     });
-// };
-
-// // Verify Email
-// router.get("/verify/:userId/:uniqueString", (req, res) => {
-//   let { userId, uniqueString } = req.params;
-
-//   UserVerification.find({ userId })
-//     .then()
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// });
-
 // confirm email
-router.post("/verifyEmail", async (req, res) => {
+router.post("/verifyEmail", validateWith(emailSchema), async (req, res) => {
   try {
     const userEmail = req.body.email;
 
     let user = await User.findOne({ email: userEmail });
-    if (!user) return res.status(404).json("This email is not registered");
+    if (!user)
+      return res.json({
+        status: "FAILED",
+        message: "This email is not registered",
+      });
 
     const { _id, email } = user;
 
     sendOTPMail({ _id, email }, res);
   } catch (error) {
-    res.status(400).json(error);
+    res.json({
+      status: "FAILED",
+      message: error.message,
+    });
   }
 });
 
