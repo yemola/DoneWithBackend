@@ -181,6 +181,7 @@ router.post("/verifyEmail", async (req, res) => {
     const userEmail = req.body.email;
 
     let user = await User.findOne({ email: userEmail });
+    if (!user) return res.status(404).json("This email is not registered");
 
     const { _id, email } = user;
 
@@ -204,13 +205,13 @@ const sendOTPMail = async ({ _id, email }, res) => {
     };
 
     // Hash otp
-    const saltRounds = 10;
+    // const saltRounds = 10;
 
-    const hashedOTP = await bcrypt.hash(otp, saltRounds);
+    // const hashedOTP = await bcrypt.hash(otp, saltRounds);
 
     const newOTPVerification = new UserOTPVerification({
       userId: _id,
-      otp: hashedOTP,
+      otp,
       createdAt: Date.now(),
       expiresAt: Date.now() + 3600000,
     });
@@ -251,15 +252,18 @@ router.post("/verifyOTP", async (req, res) => {
       } else {
         // user otp record exists
         const { expiresAt } = UserOTPRecords[0];
-        const hashedOTP = UserOTPRecords[0].otp;
+        const savedOTP = UserOTPRecords[0].otp;
 
         if (expiresAt < Date.now()) {
           // user otp record has expired
           await UserOTPVerification.deleteMany({ userId });
           throw new Error("Code has expired. Please request again.");
         } else {
-          const validOTP = await bcrypt.compare(otp, hashedOTP);
+          // const validOTP = await bcrypt.compare(otp, hashedOTP);
+          const validOTP = otp === savedOTP;
 
+          console.log("otps: ", otp, savedOTP);
+          console.log("isValid: ", validOTP);
           if (!validOTP) {
             // supplied otp is wrong
             throw new Error("Invalid code passed. Check your inbox.");
