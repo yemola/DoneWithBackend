@@ -111,7 +111,7 @@ router.post("/", validateWith(schema), async (req, res) => {
 // confirm email
 router.post("/verifyEmail", validateWith(emailSchema), async (req, res) => {
   try {
-    const userEmail = req.body.email;
+    const userEmail = req.body.email.trim();
 
     let user = await User.findOne({ email: userEmail });
     if (!user)
