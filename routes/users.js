@@ -15,6 +15,8 @@ const CryptoJS = require("crypto-js");
 // const config = require("config");
 const yup = require("yup");
 const validateWith = require("../middleware/validation");
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const schema = yup.object().shape({
   firstname: yup.string().required().label("First Name"),
@@ -34,24 +36,24 @@ const emailSchema = yup.object().shape({
 });
 
 // Nodemailer Transporter
-let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.AUTH_EMAIL,
-    pass: process.env.AUTH_PASS,
-  },
-});
+// let transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: process.env.AUTH_EMAIL,
+//     pass: process.env.AUTH_PASS,
+//   },
+// });
 
 //Testing Success
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("Verification error: ", error);
-  } else {
-    console.log("Ready for messages");
-  }
-});
+// transporter.verify((error, success) => {
+//   if (error) {
+//     console.log("Verification error: ", error);
+//   } else {
+//     console.log("Ready for messages");
+//   }
+// });
 const {
   verifyToken,
   verifyTokenAndAuthorization,
@@ -138,13 +140,30 @@ const sendOTPMail = async ({ _id, email }, res) => {
   try {
     const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
 
-    // Mail options
-    const mailOptions = {
-      from: process.env.AUTH_EMAIL,
-      to: email,
-      subject: "Verify Your Email",
+    // SendGrid Code
+    const msg = {
+      to: email, // Change to your recipient
+      from: process.env.AUTH_EMAIL, // Change to your verified sender
+      subject: "Password Reset Pin",
+      text: "sorry about the stress, we understand",
       html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
     };
+    sgMail
+      .send(msg)
+      .then(() => {
+        res.json("Email sent");
+      })
+      .catch((error) => {
+        res.json(error);
+      });
+
+    // Mail options
+    // const mailOptions = {
+    //   from: process.env.AUTH_EMAIL,
+    //   to: email,
+    //   subject: "Verify Your Email",
+    //   html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
+    // };
 
     // Hash otp
     // const saltRounds = 10;
@@ -160,7 +179,7 @@ const sendOTPMail = async ({ _id, email }, res) => {
 
     await newOTPVerification.save();
 
-    await transporter.sendMail(mailOptions);
+    // await transporter.sendMail(mailOptions);
 
     res.json({
       status: "PENDING",
