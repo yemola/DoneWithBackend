@@ -151,10 +151,10 @@ const sendOTPMail = async ({ _id, email }, res) => {
     sgMail
       .send(msg)
       .then(() => {
-        res.json("Email sent");
+        console.log("Email sent");
       })
       .catch((error) => {
-        res.json(error);
+        console.error(error);
       });
 
     // Mail options
