@@ -173,22 +173,22 @@ const sendOTPMail = async ({ _id, email }, res) => {
 
     // await transporter.sendMail(mailOptions);
 
-    await sgMail.send(msg);
-    // .then(() => {
-    //   console.log("Email sent");
-    // })
-    // .catch((error) => {
-    //   console.error(error);
-    // });
-
-    res.json({
-      status: "PENDING",
-      message: "Verification otp email sent",
-      data: {
-        userId: _id,
-        email,
-      },
-    });
+    await sgMail
+      .send(msg)
+      .then(() => {
+        console.log("Email sent");
+        res.json({
+          status: "PENDING",
+          message: "Verification otp email sent",
+          data: {
+            userId: _id,
+            email,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   } catch (error) {
     res.json({
       status: "FAILED",
