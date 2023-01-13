@@ -148,14 +148,6 @@ const sendOTPMail = async ({ _id, email }, res) => {
       text: "sorry about the stress, we understand",
       html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
     };
-    sgMail
-      .send(msg)
-      .then(() => {
-        console.log("Email sent");
-      })
-      .catch((error) => {
-        console.error(error);
-      });
 
     // Mail options
     // const mailOptions = {
@@ -180,6 +172,14 @@ const sendOTPMail = async ({ _id, email }, res) => {
     await newOTPVerification.save();
 
     // await transporter.sendMail(mailOptions);
+
+    await sgMail.send(msg);
+    // .then(() => {
+    //   console.log("Email sent");
+    // })
+    // .catch((error) => {
+    //   console.error(error);
+    // });
 
     res.json({
       status: "PENDING",
