@@ -42,10 +42,10 @@ router.post("/addNewChat", async (req, res) => {
     createdAt: newChat.createdAt,
   });
 
-  const targetUser = await User.findById(savedChat.toUserId);
-
   try {
     const savedChat = await chat.save();
+
+    const targetUser = await User.findById(savedChat.toUserId);
 
     if (!targetUser) return res.status(400).json({ status: "FAILED" });
 
