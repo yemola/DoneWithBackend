@@ -42,8 +42,17 @@ router.post("/addNewChat", async (req, res) => {
     createdAt: newChat.createdAt,
   });
 
+  const targetUser = await User.findById(savedChat.toUserId);
+
   try {
     const savedChat = await chat.save();
+
+    if (!targetUser) return res.status(400).json({ status: "FAILED" });
+
+    const { expoPushToken } = targetUser;
+
+    if (Expo.isExpoPushToken(expoPushToken))
+      await sendPushNotification(expoPushToken, savedChat);
 
     res.status(200).json(savedChat);
   } catch (error) {
