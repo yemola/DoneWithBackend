@@ -463,7 +463,7 @@ router.get("/", verifyToken, async (req, res) => {
       : await User.find();
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).json("Error verifying token");
   }
 });
 
