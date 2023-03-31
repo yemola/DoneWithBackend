@@ -93,12 +93,7 @@ router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
 //DELETE A LISTING
 
 router.delete("/:id", verifyToken, async (req, res) => {
-  // const files = req.files;
-  // console.log("files to delete: ", files);
-
   try {
-    // await s3Deletev2(files);
-    // console.log("s3Delete: ", s3Deletev2(files));
     await Listing.findByIdAndDelete(req.params.id);
     res.status(200).json("Product has been deleted...");
   } catch (err) {

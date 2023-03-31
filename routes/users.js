@@ -176,7 +176,6 @@ const sendOTPMail = async ({ _id, email }, res) => {
     await sgMail
       .send(msg)
       .then(() => {
-        console.log("Email sent");
         res.json({
           status: "PENDING",
           message: "Verification otp email sent",
@@ -220,11 +219,8 @@ router.post("/verifyOTP", async (req, res) => {
           await UserOTPVerification.deleteMany({ userId });
           throw new Error("Code has expired. Please request again.");
         } else {
-          // const validOTP = await bcrypt.compare(otp, hashedOTP);
           const validOTP = otp === savedOTP;
 
-          console.log("otps: ", otp, savedOTP);
-          console.log("isValid: ", validOTP);
           if (!validOTP) {
             // supplied otp is wrong
             throw new Error("Invalid code passed. Check your inbox.");

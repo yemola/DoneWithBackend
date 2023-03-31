@@ -27,6 +27,26 @@ router.post("/getUserChats", async (req, res) => {
   }
 });
 
+router.post("/delete", async (req, res) => {
+  try {
+    const chatsToDelete = req.body.selectedItems;
+
+    if (chatsToDelete.length === 1) {
+      const [chatId] = chatsToDelete;
+
+      await Messages.findByIdAndDelete({ chatId });
+    }
+    if (chatsToDelete.length > 1) {
+      const result = await chatsToDelete.forEach(async (delChat) => {
+        await Messages.findByIdAndDelete(delChat);
+      });
+    }
+    res.status(200).json("Deleted");
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
 router.post("/addNewChat", async (req, res) => {
   const { newChat } = req.body;
   const chat = new Messages({
