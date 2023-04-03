@@ -302,6 +302,34 @@ router.put("/resetPassword/:id", async (req, res) => {
   }
 });
 
+// UPDATE USER INFO
+router.put("/updateUser", async (req, res) => {
+  const newInfo = req.body;
+
+  const { userId } = req.body;
+
+  try {
+    const newUserDetails = await User.findByIdAndUpdate(
+      { _id: userId },
+      {
+        _id: userId,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        username: req.body.username,
+        city: req.body.city,
+        state: req.body.state,
+        country: req.body.country,
+        countryCode: req.body.countryCode,
+        whatsapp: req.body.whatsapp,
+      },
+      { new: true }
+    );
+
+    res.status(200).send(newUserDetails);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 //UPDATE
 router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
   if (req.body.password) {

@@ -58,6 +58,7 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
     .then((result) => {
       res.status(200).send({
         _id: result._id,
+        categoryId: result.categoryId,
         title: result.title,
         price: result.price,
         userId: result.userId,
@@ -74,21 +75,45 @@ router.post("/", [upload.array("images"), imageResize], async (req, res) => {
   // return res.status(201).send(listing);
 });
 
-//UPDATE
-router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
+//UPDATE LISTING
+
+router.put("/updateListing", async (req, res) => {
+  const listingId = req.body._id;
+
   try {
     const updatedListing = await Listing.findByIdAndUpdate(
-      req.params.id,
+      { _id: listingId },
       {
-        $set: req.body,
+        _id: listingId,
+        title: req.body.title,
+        price: req.body.price,
+        description: req.body.description,
+        categoryId: req.body.category.value,
       },
       { new: true }
     );
-    res.status(200).json(updatedListing);
-  } catch (err) {
-    res.status(500).json(err);
+
+    res.status(200).send(updatedListing);
+  } catch (error) {
+    console.log("error: ", error);
   }
 });
+
+//UPDATE
+// router.put("/:id", async (req, res) => {
+//   try {
+//     const updatedListing = await Listing.findByIdAndUpdate(
+//       req.params.id,
+//       {
+//         $set: req.body,
+//       },
+//       { new: true }
+//     );
+//     res.status(200).json(updatedListing);
+//   } catch (err) {
+//     res.status(500).json(err);
+//   }
+// });
 
 //DELETE A LISTING
 
