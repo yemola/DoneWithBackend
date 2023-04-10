@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   dest: "uploads/",
   fileFilter,
-  limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 5 },
+  limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 6 },
 });
 
 //CREATE

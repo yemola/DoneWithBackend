@@ -100,13 +100,39 @@ router.post("/", validateWith(schema), async (req, res) => {
         .json("Email already registered. Use another email address");
 
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+
     // => {
     // Handle account verification
     // sendVerificationEmail(savedUser, res);
     // sendOTPMail(savedUser, res);
     // });
     // res.status(201).json(savedUser);
+
+    const regNotice = {
+      to: "laflosd@gmail.com", // Change to your recipient
+      from: process.env.AUTH_EMAIL, // Change to your verified sender
+      subject: "New User Registered",
+      text: "sorry about the stress, we understand",
+      html: `<p>A new user with the details below has registered on JejeSales marketplace.</p>
+               <p>Name: ${savedUser.firstname}
+                  ${savedUser.lastname} </p>
+                 <p>City: ${savedUser.city}</p>
+                  <p>State: ${savedUser.state}</p>
+                  <p>Country: ${savedUser.country}</p>`,
+    };
+
+    await sgMail.send(regNotice);
+    // .then(() => {
+    //   res.json({
+    //     status: "PENDING",
+    //     message: "Account registration notification sent",
+    //   });
+    // })
+    // .catch((error) => {
+    //   console.error(error);
+    // });
+
+    res.status(201).json(savedUser);
   } catch (err) {
     res.status(500).json(err);
   }
