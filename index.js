@@ -33,7 +33,6 @@ app.use("/api/auth", authRoute);
 app.use("/api/categories", categoriesRoute);
 app.use("/api/listings", listingsRoute);
 app.use("/api/orders", orderRoute);
-app.use("/api/checkout", stripeRoute);
 
 app.use("/api/categories", categories);
 
