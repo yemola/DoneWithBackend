@@ -9,7 +9,6 @@ const authRoute = require("./routes/auth");
 const categoriesRoute = require("./routes/categories");
 const listingsRoute = require("./routes/listings");
 const orderRoute = require("./routes/order");
-const stripeRoute = require("./routes/stripe");
 const my = require("./routes/my");
 const messages = require("./routes/messages");
 const helmet = require("helmet");
