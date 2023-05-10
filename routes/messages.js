@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const yup = require("yup");
 const { Expo } = require("expo-server-sdk");
+// const redis = require("redis");
+// const client = redis.createClient();
 
 const User = require("../models/User");
 const Listing = require("../models/Listing");
@@ -31,10 +33,12 @@ router.post("/delete", async (req, res) => {
   try {
     const chatsToDelete = req.body.selectedItems;
 
+    console.log("chat: ", chatsToDelete);
+
     if (chatsToDelete.length === 1) {
       const [chatId] = chatsToDelete;
 
-      await Messages.findByIdAndDelete({ chatId });
+      await Messages.findByIdAndDelete({ _id: chatId });
     }
     if (chatsToDelete.length > 1) {
       const result = await chatsToDelete.forEach(async (delChat) => {
@@ -60,6 +64,9 @@ router.post("/addNewChat", async (req, res) => {
     senderImg: newChat.senderImg,
     receiverImg: newChat.receiverImg,
     createdAt: newChat.createdAt,
+    createdDate: newChat.date,
+    createdTime: newChat.time,
+    status: newChat.status,
   });
 
   try {
@@ -71,12 +78,34 @@ router.post("/addNewChat", async (req, res) => {
 
     const { expoPushToken } = targetUser;
 
+    const { toUserId: userId } = savedChat;
+    console.log("userId: ", userId);
+
     if (Expo.isExpoPushToken(expoPushToken))
       await sendPushNotification(expoPushToken, savedChat);
+
+    // const incrementNotificationCount = (userId) => {
+    //   client.incr('notification-count:${userId}');
+    // }
 
     res.status(200).json(savedChat);
   } catch (error) {
     res.status(500).json(error);
+  }
+});
+
+router.patch("/", async (req, res) => {
+  let idsToUpdate = req.body.idsToUpdate;
+
+  try {
+    const result = await Messages.updateMany(
+      { _id: { $in: idsToUpdate } },
+      { $set: { status: "read" } }
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json(error);
   }
 });
 
@@ -92,7 +121,21 @@ router.post("/", validateWith(schema), async (req, res) => {
 
   if (!targetUser)
     return res.status(400).json({ status: "FAILED", message: error.message });
-
+  let now = new Date();
+  const month = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const newMessage = new Messages({
     fromUserId: user.userId,
     toUserId: listing.userId,
@@ -103,7 +146,12 @@ router.post("/", validateWith(schema), async (req, res) => {
     receiver: `${targetUser.firstname} ${targetUser.lastname}`,
     senderImg: user.image,
     receiverImg: targetUser.image,
-    createdAt: Date.now(),
+    createdAt: new Date(),
+    createdDate: `${
+      month[now.getUTCMonth()]
+    } ${now.getDate()}, ${now.getFullYear()}`,
+    createdTime: `${now.getHours()}:${now.getMinutes()}`,
+    status: "sent",
   });
   await newMessage.save();
 

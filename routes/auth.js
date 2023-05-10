@@ -50,7 +50,7 @@ router.post("/", validateWith(schema), async (req, res) => {
         expoPushToken: user.expoPushToken,
       },
       process.env.JWT_SEC,
-      { expiresIn: "5d" }
+      { expiresIn: "14d" }
     );
     res.status(200).json(token);
   } catch (error) {

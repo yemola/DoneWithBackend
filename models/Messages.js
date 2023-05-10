@@ -11,6 +11,9 @@ const MessagesSchema = new mongoose.Schema({
   senderImg: { type: String },
   receiverImg: { type: String },
   createdAt: { type: Date },
+  createdDate: { type: String },
+  createdTime: { type: String },
+  status: { type: String, default: "sent" },
 });
 
 module.exports = mongoose.model("Messages", MessagesSchema);
