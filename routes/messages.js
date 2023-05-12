@@ -94,15 +94,31 @@ router.post("/addNewChat", async (req, res) => {
   }
 });
 
-router.patch("/", async (req, res) => {
-  let idsToUpdate = req.body.idsToUpdate;
+router.post("/getTotalNumOfChats", async (req, res) => {
+  console.log("reqBody: ", req.body);
+  const { userId } = req.body;
+
+  try {
+    const count = await Messages.countDocuments({
+      toUserId: userId,
+      status: "sent",
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(400).json(error);
+  }
+});
+
+router.post("/", async (req, res) => {
+  console.log("body: ", req.body);
+  let [idsToUpdate] = req.body;
 
   try {
     const result = await Messages.updateMany(
       { _id: { $in: idsToUpdate } },
       { $set: { status: "read" } }
     );
-
+    console.log("result: ", result);
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json(error);

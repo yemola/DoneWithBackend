@@ -463,6 +463,7 @@ router.post("/deleteUserAccount", async (req, res) => {
     const deletedUser = await newDelete.save();
 
     const response = await Listing.deleteMany({ userId });
+    console.log("deleting listings: ", response.data);
     // response === "null"
     //   ? console.log("listings deleted")
     //   : console.log("not deleted: ", response.problem);
