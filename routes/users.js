@@ -330,8 +330,6 @@ router.put("/resetPassword/:id", async (req, res) => {
 
 // UPDATE USER INFO
 router.put("/updateUser", async (req, res) => {
-  const newInfo = req.body;
-
   const { userId } = req.body;
 
   try {

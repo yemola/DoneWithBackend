@@ -103,24 +103,24 @@ router.post("/getTotalNumOfChats", async (req, res) => {
       toUserId: userId,
       status: "sent",
     });
-    res.status(200).json({ count });
+    console.log("count: ", count);
+    if (count) res.status(200).json({ count });
   } catch (error) {
+    console.log("error: ", error);
     res.status(400).json(error);
   }
 });
 
-router.post("/", async (req, res) => {
-  console.log("body: ", req.body);
-  let [idsToUpdate] = req.body;
-
+router.put("/updateChats", async (req, res) => {
   try {
     const result = await Messages.updateMany(
-      { _id: { $in: idsToUpdate } },
+      { _id: { $in: req.body } },
       { $set: { status: "read" } }
     );
     console.log("result: ", result);
     res.status(200).json(result);
   } catch (error) {
+    console.log("err: ", error);
     res.status(400).json(error);
   }
 });
