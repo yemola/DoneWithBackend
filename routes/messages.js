@@ -33,8 +33,6 @@ router.post("/delete", async (req, res) => {
   try {
     const chatsToDelete = req.body.selectedItems;
 
-    console.log("chat: ", chatsToDelete);
-
     if (chatsToDelete.length === 1) {
       const [chatId] = chatsToDelete;
 
@@ -83,10 +81,6 @@ router.post("/addNewChat", async (req, res) => {
 
     if (Expo.isExpoPushToken(expoPushToken))
       await sendPushNotification(expoPushToken, savedChat);
-
-    // const incrementNotificationCount = (userId) => {
-    //   client.incr('notification-count:${userId}');
-    // }
 
     res.status(200).json(savedChat);
   } catch (error) {
