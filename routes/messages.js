@@ -106,15 +106,22 @@ router.post("/getTotalNumOfChats", async (req, res) => {
 });
 
 router.put("/updateChats", async (req, res) => {
+  console.log("reqBody: ", req.body);
+  const { idsToUpdate } = req.body;
+  console.log("ids: ", idsToUpdate);
   try {
-    const result = await Messages.updateMany(
-      { _id: { $in: req.body } },
-      { $set: { status: "read" } }
-    );
+    const result = [];
+    for (const id of idsToUpdate) {
+      console.log("id: ", id);
+      const updatedMessage = await Messages.findByIdAndUpdate(id, {
+        status: "read",
+      });
+      result.push(updatedMessage);
+    }
+
     console.log("result: ", result);
     res.status(200).json(result);
   } catch (error) {
-    console.log("err: ", error);
     res.status(400).json(error);
   }
 });
