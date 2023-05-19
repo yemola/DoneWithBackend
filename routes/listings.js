@@ -95,7 +95,8 @@ router.put("/updateListing", async (req, res) => {
 
     res.status(200).send(updatedListing);
   } catch (error) {
-    console.log("error: ", error);
+    // console.log("error: ", error);
+    res.status(500).json(error);
   }
 });
 

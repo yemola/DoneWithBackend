@@ -2,8 +2,6 @@ const express = require("express");
 const router = express.Router();
 const yup = require("yup");
 const { Expo } = require("expo-server-sdk");
-// const redis = require("redis");
-// const client = redis.createClient();
 
 const User = require("../models/User");
 const Listing = require("../models/Listing");
@@ -88,38 +86,34 @@ router.post("/addNewChat", async (req, res) => {
   }
 });
 
-router.post("/getTotalNumOfChats", async (req, res) => {
-  console.log("reqBody: ", req.body);
-  const { userId } = req.body;
+// router.post("/getTotalNumOfChats", async (req, res) => {
+//   console.log("reqBody: ", req.body);
+//   const { userId } = req.body;
 
-  try {
-    const count = await Messages.countDocuments({
-      toUserId: userId,
-      status: "sent",
-    });
-    console.log("count: ", count);
-    if (count) res.status(200).json({ count });
-  } catch (error) {
-    console.log("error: ", error);
-    res.status(400).json(error);
-  }
-});
+//   try {
+//     const count = await Messages.countDocuments({
+//       toUserId: userId,
+//       status: "sent",
+//     });
+//     console.log("count: ", count);
+//     if (count) res.status(200).json({ count });
+//   } catch (error) {
+//     console.log("error: ", error);
+//     res.status(400).json(error);
+//   }
+// });
 
 router.put("/updateChats", async (req, res) => {
-  console.log("reqBody: ", req.body);
   const { idsToUpdate } = req.body;
-  console.log("ids: ", idsToUpdate);
   try {
     const result = [];
     for (const id of idsToUpdate) {
-      console.log("id: ", id);
       const updatedMessage = await Messages.findByIdAndUpdate(id, {
         status: "read",
       });
       result.push(updatedMessage);
     }
 
-    console.log("result: ", result);
     res.status(200).json(result);
   } catch (error) {
     res.status(400).json(error);
