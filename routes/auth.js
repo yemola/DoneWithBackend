@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const CryptoJS = require("crypto-js");
 const validateWith = require("../middleware/validation");
-const config = require("config");
+const errorHandler = require("../middleware/errorHandler");
 
 const schema = yup.object().shape({
   email: yup.string().email().required(),
@@ -14,7 +14,7 @@ const schema = yup.object().shape({
 
 //LOGIN
 
-router.post("/", validateWith(schema), async (req, res) => {
+router.post("/", validateWith(schema), async (req, res, next) => {
   const query1 = req.body.username;
   const query2 = req.body.email;
   try {
@@ -54,8 +54,10 @@ router.post("/", validateWith(schema), async (req, res) => {
     );
     res.status(200).json(token);
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
   }
 });
+
+router.use(errorHandler);
 
 module.exports = router;

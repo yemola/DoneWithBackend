@@ -1,18 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const Categories = require("../models/Categories");
+const errorHandler = require("../middleware/errorHandler");
 
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const categories = await Categories.find();
 
     res.status(200).send(categories);
-  } catch {
-    res.status(400).json(error);
+  } catch (error) {
+    next(error);
+    // res.status(400).json(error);
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
     const newCategory = new Categories({
       backgroundColor: req.body.backgroundColor,
@@ -24,8 +26,11 @@ router.post("/", async (req, res) => {
     const savedCategory = await newCategory.save();
     res.status(201).json(savedCategory);
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
+    // res.status(500).json(error);
   }
 });
+
+router.use(errorHandler);
 
 module.exports = router;

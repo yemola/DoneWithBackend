@@ -4,7 +4,7 @@ const Listing = require("../models/Listing");
 const imageResize = require("../middleware/imageResize");
 const multer = require("multer");
 const { s3Uploadv2, s3Deletev2 } = require("./s3Service");
-const auth = require("../middleware/auth");
+const errorHandler = require("../middleware/errorHandler");
 
 const {
   verifyToken,
@@ -28,56 +28,62 @@ const upload = multer({
 
 //CREATE
 
-router.post("/", [upload.array("images"), imageResize], async (req, res) => {
-  const files = req.files;
+router.post(
+  "/",
+  [upload.array("images"), imageResize],
+  async (req, res, next) => {
+    const files = req.files;
 
-  const data = await s3Uploadv2(files);
+    const data = await s3Uploadv2(files);
 
-  const listing = new Listing({
-    title: req.body.title,
-    price: req.body.price,
-    categoryId: parseInt(req.body.categoryId),
-    description: req.body.description,
-    userId: req.body.userId,
-    userImg: req.body.userImg,
-    username: req.body.username,
-    state: req.body.state,
-    country: req.body.country,
-    countryCode: req.body.countryCode,
-    whatsapp: req.body.whatsapp,
-    images: data.map((image) => ({
-      url: `${image.Location}`,
-      thumbnailUrl: `${image.Location}`,
-    })),
-  });
-
-  if (req.body.location) listing.location = JSON.parse(req.body.location);
-
-  listing
-    .save()
-    .then((result) => {
-      res.status(200).send({
-        _id: result._id,
-        categoryId: result.categoryId,
-        title: result.title,
-        price: result.price,
-        userId: result.userId,
-        description: result.description,
-        images: data.map((image) => ({
-          url: `${image.Location}`,
-          thumbnailUrl: `${image.Location}`,
-        })),
-      });
-    })
-    .catch((err) => {
-      res.status(500).json(err);
+    const listing = new Listing({
+      title: req.body.title,
+      price: req.body.price,
+      categoryId: parseInt(req.body.categoryId),
+      description: req.body.description,
+      userId: req.body.userId,
+      userImg: req.body.userImg,
+      username: req.body.username,
+      state: req.body.state,
+      country: req.body.country,
+      countryCode: req.body.countryCode,
+      whatsapp: req.body.whatsapp,
+      images: data.map((image) => ({
+        url: `${image.Location}`,
+        thumbnailUrl: `${image.Location}`,
+      })),
     });
-  // return res.status(201).send(listing);
-});
+
+    if (req.body.location) listing.location = JSON.parse(req.body.location);
+
+    listing
+      .save()
+      .then((result) => {
+        res.status(200).send({
+          _id: result._id,
+          categoryId: result.categoryId,
+          title: result.title,
+          price: result.price,
+          userId: result.userId,
+          description: result.description,
+          images: data.map((image) => ({
+            url: `${image.Location}`,
+            thumbnailUrl: `${image.Location}`,
+          })),
+        });
+      })
+      .catch((err) => {
+        next(err);
+      });
+    // return res.status(201).send(listing);
+    // url: `${cloudFrontUrl}/${image.key}`,
+    //         thumbnailUrl: `${cloudFrontUrl}/${image.key}`,
+  }
+);
 
 //UPDATE LISTING
 
-router.put("/updateListing", async (req, res) => {
+router.put("/updateListing", async (req, res, next) => {
   const listingId = req.body._id;
 
   try {
@@ -95,13 +101,12 @@ router.put("/updateListing", async (req, res) => {
 
     res.status(200).send(updatedListing);
   } catch (error) {
-    // console.log("error: ", error);
-    res.status(500).json(error);
+    next(error);
   }
 });
 
 //UPDATE
-// router.put("/:id", async (req, res) => {
+// router.put("/:id", async (req, res, next) => {
 //   try {
 //     const updatedListing = await Listing.findByIdAndUpdate(
 //       req.params.id,
@@ -118,45 +123,60 @@ router.put("/updateListing", async (req, res) => {
 
 //DELETE A LISTING
 
-router.delete("/:id", verifyToken, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res, next) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+
+    const response = await s3Deletev2(listing.images);
+  } catch (error) {
+    next(error);
+  }
+
   try {
     await Listing.findByIdAndDelete(req.params.id);
     res.status(200).json("Product has been deleted...");
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
   }
 });
 
 //DELETING SOME LISTINGS
 
-router.delete("/deleteListings", verifyToken, async (req, res) => {
-  const user = JSON.parse(req.query.user);
-  const userId = user.userId;
+// router.delete("/deleteListings", verifyToken, async (req, res, next) => {
+//   const user = JSON.parse(req.query.user);
+//   const userId = user.userId;
+//   console.log("body: ", req.body);
 
-  try {
-    for (let listing of myListings) {
-      await Listing.findByIdAndDelete(listing._id);
-    }
-    res.status(200).json("Successfully deleted");
-  } catch (error) {
-    res.status(400).json("listings deletion failed", error);
-  }
-});
+//   for (let listing of myListings) {
+//     const response = await s3Deletev2(listing.images);
+//     console.log("deleteResponse: ", response);
+//   }
+
+// try {
+//   for (let listing of myListings) {
+//     await Listing.findByIdAndDelete(listing._id);
+//   }
+//   res.status(200).json("Successfully deleted");
+// } catch (error) {
+//   res.status(400).json("listings deletion failed", error);
+// }
+// });
 
 //GET PRODUCT
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   try {
     const item = await Listing.findById(req.params.id);
     res.status(200).json(item);
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
+    // res.status(500).json(err);
   }
 });
 
 //GET MY PRODUCTs
 
-// router.post("/mylistings", async (req, res) => {
+// router.post("/mylistings", async (req, res, next) => {
 //   console.log("reqbodyMY: ", req.body);
 //   let { userId } = req.body;
 //   const myListings = await Listing.find({ userId });
@@ -164,7 +184,7 @@ router.get("/:id", async (req, res) => {
 //   res.send(resources);
 // });
 
-router.post("/getSum", async (req, res) => {
+router.post("/getSum", async (req, res, next) => {
   try {
     const userId = req.body.userId;
     const myListings = await Listing.find({ userId });
@@ -178,13 +198,14 @@ router.post("/getSum", async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).json(error);
+    next(error);
+    // res.status(400).json(error);
   }
 });
 
 //GET ALL PRODUCTS
 
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   const qNew = req.query.new;
   const qCategory = req.query.categoryId;
   try {
@@ -204,8 +225,10 @@ router.get("/", async (req, res) => {
     }
     res.status(200).json(items);
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
   }
 });
+
+router.use(errorHandler);
 
 module.exports = router;

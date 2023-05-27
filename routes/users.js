@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { s3UploadOne } = require("./s3Service");
-const { v4: uuidv4 } = require("uuid");
+const { s3UploadOne, s3Deletev2 } = require("./s3Service");
 require("dotenv").config();
 const DeletedListing = require("../models/DeletedListing");
 const DeletedUser = require("../models/DeletedUser");
@@ -13,6 +12,7 @@ const CryptoJS = require("crypto-js");
 const yup = require("yup");
 const validateWith = require("../middleware/validation");
 const sgMail = require("@sendgrid/mail");
+const errorHandler = require("../middleware/errorHandler");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const schema = yup.object().shape({
@@ -32,25 +32,6 @@ const emailSchema = yup.object().shape({
   email: yup.string().required().email().label("Email"),
 });
 
-// Nodemailer Transporter
-// let transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: process.env.AUTH_EMAIL,
-//     pass: process.env.AUTH_PASS,
-//   },
-// });
-
-//Testing Success
-// transporter.verify((error, success) => {
-//   if (error) {
-//     console.log("Verification error: ", error);
-//   } else {
-//     console.log("Ready for messages");
-//   }
-// });
 const {
   verifyToken,
   verifyTokenAndAuthorization,
@@ -64,6 +45,57 @@ const fileFilter = (req, file, cb) => {
     cb(new Error("file is not of the correct type"), false);
   }
 };
+router.post("/deleteUserAccount", async (req, res, next) => {
+  const { userId } = req.body;
+
+  try {
+    let user = await User.findOne({ _id: userId });
+
+    if (!user) return res.json("User already deleted");
+
+    let newDelete = new DeletedUser({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      username: user.username,
+      city: user.city,
+      state: user.state,
+      country: user.country,
+      countryCode: user.countryCode,
+      email: user.email,
+      password: user.password,
+      whatsapp: user.whatsapp,
+      image: user.image,
+      isAdmin: user.isAdmin,
+      verified: user.verified,
+      expoPushToken: user.expoPushToken,
+    });
+    await newDelete.save();
+
+    const userListings = await Listing.find({ userId });
+
+    for (listing of userListings) {
+      try {
+        await s3Deletev2(listing.images);
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    await Listing.deleteMany({ userId });
+
+    const result = await User.findByIdAndDelete(userId);
+    if (!result) {
+      return res.status(204).json({
+        message: "User account deleted.",
+      });
+    } else {
+      return res.status(204).end();
+    }
+  } catch (error) {
+    next(error);
+    // res.status(500).json({ message: "Internal server error", error });
+  }
+});
 
 const upload = multer({
   dest: "profile/",
@@ -71,8 +103,8 @@ const upload = multer({
   limits: { fileSize: 10000000, fieldSize: 25 * 1024 * 1024, files: 5 },
 });
 
-//REGISTER
-router.post("/", validateWith(schema), async (req, res) => {
+//REGISTER / CREATE USER
+router.post("/", validateWith(schema), async (req, res, next) => {
   let newUser = new User({
     firstname: req.body.firstname,
     lastname: req.body.lastname,
@@ -98,13 +130,6 @@ router.post("/", validateWith(schema), async (req, res) => {
 
     const savedUser = await newUser.save();
 
-    // => {
-    // Handle account verification
-    // sendVerificationEmail(savedUser, res);
-    // sendOTPMail(savedUser, res);
-    // });
-    // res.status(201).json(savedUser);
-
     const regNotice = {
       to: "laflosd@gmail.com", // Change to your recipient
       from: process.env.AUTH_EMAIL, // Change to your verified sender
@@ -119,44 +144,36 @@ router.post("/", validateWith(schema), async (req, res) => {
     };
 
     await sgMail.send(regNotice);
-    // .then(() => {
-    //   res.json({
-    //     status: "PENDING",
-    //     message: "Account registration notification sent",
-    //   });
-    // })
-    // .catch((error) => {
-    //   console.error(error);
-    // });
 
     res.status(201).json(savedUser);
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
   }
 });
 
 // confirm email
-router.post("/verifyEmail", validateWith(emailSchema), async (req, res) => {
-  try {
-    const userEmail = req.body.email.trim();
+router.post(
+  "/verifyEmail",
+  validateWith(emailSchema),
+  async (req, res, next) => {
+    try {
+      const userEmail = req.body.email.trim();
 
-    let user = await User.findOne({ email: userEmail });
-    if (!user)
-      return res.json({
-        status: "FAILED",
-        message: "This email is not registered",
-      });
+      let user = await User.findOne({ email: userEmail });
+      if (!user)
+        return res.json({
+          status: "FAILED",
+          message: "This email is not registered",
+        });
 
-    const { _id, email } = user;
+      const { _id, email } = user;
 
-    sendOTPMail({ _id, email }, res);
-  } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
+      sendOTPMail({ _id, email }, res);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Send otp verification email
 const sendOTPMail = async ({ _id, email }, res) => {
@@ -209,17 +226,14 @@ const sendOTPMail = async ({ _id, email }, res) => {
         });
       })
       .catch((error) => {
-        console.error(error);
+        next(error);
       });
   } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
+    next(error);
   }
 };
 // Verify otp email
-router.post("/verifyOTP", async (req, res) => {
+router.post("/verifyOTP", async (req, res, next) => {
   try {
     let { userId, otp } = req.body;
 
@@ -260,14 +274,11 @@ router.post("/verifyOTP", async (req, res) => {
       }
     }
   } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
+    next(error);
   }
 });
 // resend verification
-router.post("/resendOTP", async (req, res) => {
+router.post("/resendOTP", async (req, res, next) => {
   try {
     let { userId, email } = req.body;
 
@@ -279,15 +290,16 @@ router.post("/resendOTP", async (req, res) => {
       sendOTPMail({ _id: userId, email }, res);
     }
   } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
+    next(error);
+    // res.json({
+    //   status: "FAILED",
+    //   message: error.message,
+    // });
   }
 });
 
 // update password
-router.put("/resetPassword/:id", async (req, res) => {
+router.put("/resetPassword/:id", async (req, res, next) => {
   try {
     const { password, userId } = req.body;
     const user = await User.findOne({ _id: userId });
@@ -316,17 +328,16 @@ router.put("/resetPassword/:id", async (req, res) => {
 
     res.status(200).send(updatedUser);
   } catch (error) {
-    res.json({
-      status: "FAILED",
-      message: error.message,
-    });
-
-    // res.status(500).json(error);
+    // res.json({
+    //   status: "FAILED",
+    //   message: error.message,
+    // });
+    next(error);
   }
 });
 
 // UPDATE USER INFO
-router.put("/updateUser", async (req, res) => {
+router.put("/updateUser", async (req, res, next) => {
   const { userId } = req.body;
 
   try {
@@ -348,48 +359,54 @@ router.put("/updateUser", async (req, res) => {
 
     res.status(200).send(newUserDetails);
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
+    // res.status(500).json(err);
   }
 });
 //UPDATE
-router.put("/storetoken/:id", verifyTokenAndAuthorization, async (req, res) => {
-  if (req.body.password) {
-    req.body.password = CryptoJS.AES.encrypt(
-      req.body.password,
-      process.env.PASS_SEC
-    ).toString();
-  }
+router.put(
+  "/storetoken/:id",
+  verifyTokenAndAuthorization,
+  async (req, res, next) => {
+    if (req.body.password) {
+      req.body.password = CryptoJS.AES.encrypt(
+        req.body.password,
+        process.env.PASS_SEC
+      ).toString();
+    }
 
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        username: req.body.username,
-        city: req.body.city,
-        state: req.body.state,
-        country: req.body.country,
-        countryCode: req.body.countryCode,
-        whatsapp: req.body.whatsapp,
-        password: req.body.password,
-        image: req.body.image,
-        isAdmin: req.body.isAdmin,
-        expoPushToken: req.body.token,
-      },
-      { new: true }
-    );
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        {
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          username: req.body.username,
+          city: req.body.city,
+          state: req.body.state,
+          country: req.body.country,
+          countryCode: req.body.countryCode,
+          whatsapp: req.body.whatsapp,
+          password: req.body.password,
+          image: req.body.image,
+          isAdmin: req.body.isAdmin,
+          expoPushToken: req.body.token,
+        },
+        { new: true }
+      );
 
-    res.status(200).send(updatedUser);
-  } catch (err) {
-    res.status(500).json(err);
+      res.status(200).send(updatedUser);
+    } catch (err) {
+      next(err);
+      // res.status(500).json(err);
+    }
   }
-});
+);
 
 router.put(
   "/:id",
   [verifyTokenAndAuthorization, upload.single("image")],
-  async (req, res) => {
+  async (req, res, next) => {
     if (req.body.password) {
       req.body.password = CryptoJS.AES.encrypt(
         req.body.password,
@@ -426,19 +443,39 @@ router.put(
 
       res.status(200).send(updatedUser);
     } catch (err) {
-      res.status(500).json(err);
+      next(err);
+      // res.status(500).json(err);
     }
   }
 );
 
 // DELETE A USER
-router.post("/deleteUserAccount", async (req, res) => {
+router.post("/deleteUserAccount", async (req, res, next) => {
   const { userId } = req.body;
 
   try {
     let user = await User.findOne({ _id: userId });
 
-    if (!user) res.json("User already deleted");
+    try {
+      const delNotice = {
+        to: "laflosd@gmail.com", // Change to your recipient
+        from: process.env.AUTH_EMAIL, // Change to your verified sender
+        subject: "User Account Deletion",
+        text: "sorry about the stress, we understand",
+        html: `<p>A user account is being deleted from JejeSales Marketplace. Below are the details of the user.</p>
+                   <p>Name: ${user.firstname}
+                      ${user.lastname} </p>
+                     <p>City: ${user.city}</p>
+                      <p>State: ${user.state}</p>
+                      <p>Country: ${user.country}</p>`,
+      };
+
+      await sgMail.send(delNotice);
+    } catch (error) {
+      next(error);
+    }
+
+    if (!user) return res.json("User already deleted");
     let newDelete = new DeletedUser({
       firstname: user.firstname,
       lastname: user.lastname,
@@ -457,51 +494,64 @@ router.post("/deleteUserAccount", async (req, res) => {
     });
     const deletedUser = await newDelete.save();
 
-    const response = await Listing.deleteMany({ userId });
-    console.log("deleting listings: ", response.data);
-    // response === "null"
-    //   ? console.log("listings deleted")
-    //   : console.log("not deleted: ", response.problem);
+    const userListings = await Listing.find({ userId });
 
+    for (listing of userListings) {
+      try {
+        const imgDel = await s3Deletev2(listing.images);
+
+        res.status(204).json({ message: "listing images deleted." });
+      } catch (error) {
+        next(error);
+        // res.status(404).json({ message: "listing images could not be found." });
+      }
+    }
+
+    const response = await Listing.deleteMany({ userId });
+
+    if (!response)
+      res.status(204).json({ message: "Could not delete listings." });
     const result = await User.findByIdAndDelete(userId);
-    if (result === "null")
-      res.json({
-        status: "SUCCESS",
+    if (!result)
+      return res.status(204).json({
         message: "User account deleted.",
       });
   } catch (error) {
-    res.status(400).json(error);
+    next(error);
+    // res.status(500).json({ message: "internal server error", error });
   }
 });
 
 //DELETE
 
-router.delete("/:id", verifyTokenAndAuthorization, async (req, res) => {
+router.delete("/:id", verifyTokenAndAuthorization, async (req, res, next) => {
   try {
     const userId = req.body.userId;
 
     await User.findByIdAndDelete(userId);
     res.status(200).json("User has been deleted...");
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
+    // res.status(500).json(err);
   }
 });
 
 //GET USER
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     const { password, ...others } = user._doc;
     res.status(200).json(others);
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
+    // res.status(500).json(error);
   }
 });
 
 //GET ALL USER
 
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, async (req, res, next) => {
   const query = req.query.new;
   try {
     const users = query
@@ -509,13 +559,14 @@ router.get("/", verifyToken, async (req, res) => {
       : await User.find();
     res.status(200).json(users);
   } catch (err) {
-    res.status(500).json("Error verifying token");
+    next(err);
+    // res.status(500).json("Error verifying token");
   }
 });
 
 //GET USER STATS
 
-router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
+router.get("/stats", verifyTokenAndAdmin, async (req, res, next) => {
   const date = new Date();
   const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
 
@@ -536,8 +587,10 @@ router.get("/stats", verifyTokenAndAdmin, async (req, res) => {
     ]);
     res.status(200).json(data);
   } catch (err) {
-    res.status(500).json(err);
+    next(err);
   }
 });
+
+router.use(errorHandler);
 
 module.exports = router;

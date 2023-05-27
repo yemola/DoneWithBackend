@@ -14,7 +14,15 @@ const messages = require("./routes/messages");
 const helmet = require("helmet");
 const compression = require("compression");
 const mongoose = require("mongoose");
-const { config } = require("dotenv");
+
+const Sentry = require("@sentry/node");
+
+Sentry.init({
+  dsn: process.env.DSN,
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  tracesSampleRate: 1.0,
+});
 
 const mongoUrl = process.env.MONGO_URL;
 mongoose

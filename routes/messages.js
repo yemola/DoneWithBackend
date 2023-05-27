@@ -7,15 +7,15 @@ const User = require("../models/User");
 const Listing = require("../models/Listing");
 const Messages = require("../models/Messages");
 const sendPushNotification = require("../utilities/pushNotifications");
-const auth = require("../middleware/auth");
 const validateWith = require("../middleware/validation");
+const errorHandler = require("../middleware/errorHandler");
 
 const schema = yup.object().shape({
   listingId: yup.string().required(),
   message: yup.string().required(),
 });
 
-router.post("/getUserChats", async (req, res) => {
+router.post("/getUserChats", async (req, res, next) => {
   const userId = req.body.userId;
 
   try {
@@ -23,11 +23,11 @@ router.post("/getUserChats", async (req, res) => {
 
     res.status(200).send(resources);
   } catch (error) {
-    res.status(400).json(error);
+    next(error);
   }
 });
 
-router.post("/delete", async (req, res) => {
+router.post("/delete", async (req, res, next) => {
   try {
     const chatsToDelete = req.body.selectedItems;
 
@@ -43,11 +43,11 @@ router.post("/delete", async (req, res) => {
     }
     res.status(200).json("Deleted");
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
   }
 });
 
-router.post("/addNewChat", async (req, res) => {
+router.post("/addNewChat", async (req, res, next) => {
   const { newChat } = req.body;
   const chat = new Messages({
     fromUserId: newChat.fromUserId,
@@ -73,20 +73,18 @@ router.post("/addNewChat", async (req, res) => {
     if (!targetUser) return res.status(400).json({ status: "FAILED" });
 
     const { expoPushToken } = targetUser;
-
-    const { toUserId: userId } = savedChat;
-    console.log("userId: ", userId);
+    // const { toUserId: userId } = savedChat;
 
     if (Expo.isExpoPushToken(expoPushToken))
       await sendPushNotification(expoPushToken, savedChat);
 
     res.status(200).json(savedChat);
   } catch (error) {
-    res.status(500).json(error);
+    next(error);
   }
 });
 
-// router.post("/getTotalNumOfChats", async (req, res) => {
+// router.post("/getTotalNumOfChats", async (req, res, next) => {
 //   console.log("reqBody: ", req.body);
 //   const { userId } = req.body;
 
@@ -103,7 +101,7 @@ router.post("/addNewChat", async (req, res) => {
 //   }
 // });
 
-router.put("/updateChats", async (req, res) => {
+router.put("/updateChats", async (req, res, next) => {
   const { idsToUpdate } = req.body;
   try {
     const result = [];
@@ -116,11 +114,11 @@ router.put("/updateChats", async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json(error);
+    next(error);
   }
 });
 
-router.post("/", validateWith(schema), async (req, res) => {
+router.post("/", validateWith(schema), async (req, res, next) => {
   const { listingId, message, user } = req.body;
 
   const listing = await Listing.findById(listingId);
@@ -173,5 +171,7 @@ router.post("/", validateWith(schema), async (req, res) => {
 
   res.status(201).send("Message sent successfully.");
 });
+
+router.use(errorHandler);
 
 module.exports = router;

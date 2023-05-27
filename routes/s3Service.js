@@ -1,4 +1,4 @@
-const config = require("config");
+require("dotenv").config();
 const { S3 } = require("aws-sdk");
 const uuid = require("uuid").v4;
 const fs = require("fs");
@@ -52,11 +52,11 @@ exports.s3Deletev2 = async (files) => {
   });
 
   const params = files.map((file) => {
-    const fileStream = fs.createReadStream(file.path);
+    const baseUrl = `https://${bucketName}.s3.${region}.amazonaws.com/`;
+
     return {
       Bucket: bucketName,
-      Body: fileStream,
-      Key: file.filename,
+      Key: file.url.replace(new RegExp(`^${baseUrl}`), ""),
     };
   });
 

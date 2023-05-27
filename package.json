@@ -14,6 +14,7 @@
     "@bugsnag/js": "^7.17.4",
     "@bugsnag/plugin-express": "^7.17.4",
     "@sendgrid/mail": "^7.7.0",
+    "@sentry/node": "^7.53.1",
     "aws-sdk": "^2.1223.0",
     "bcrypt": "^5.1.0",
     "compression": "^1.7.4",
