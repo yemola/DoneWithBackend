@@ -2,7 +2,11 @@ require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const multer = require("multer");
-const app = express();
+const helmet = require("helmet");
+const compression = require("compression");
+const mongoose = require("mongoose");
+const Sentry = require("@sentry/node");
+
 const categories = require("./routes/categories");
 const usersRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
@@ -11,11 +15,8 @@ const listingsRoute = require("./routes/listings");
 const orderRoute = require("./routes/order");
 const my = require("./routes/my");
 const messages = require("./routes/messages");
-const helmet = require("helmet");
-const compression = require("compression");
-const mongoose = require("mongoose");
 
-const Sentry = require("@sentry/node");
+const app = express();
 
 Sentry.init({
   dsn: process.env.DSN,
