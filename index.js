@@ -7,7 +7,8 @@ const compression = require("compression");
 const mongoose = require("mongoose");
 const Sentry = require("@sentry/node");
 
-const categories = require("./routes/categories");
+// const categories = require("./routes/categories");
+const faqsRoute = require("./routes/faqs");
 const usersRoute = require("./routes/users");
 const authRoute = require("./routes/auth");
 const categoriesRoute = require("./routes/categories");
@@ -40,10 +41,11 @@ app.use(compression());
 app.use("/api/users", usersRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/categories", categoriesRoute);
+app.use("/api/faqs", faqsRoute);
 app.use("/api/listings", listingsRoute);
 app.use("/api/orders", orderRoute);
 
-app.use("/api/categories", categories);
+// app.use("/api/categories", categories);
 
 app.use("/api/my", my);
 app.use("/api/messages", messages);

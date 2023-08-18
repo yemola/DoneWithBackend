@@ -32,6 +32,7 @@ router.post("/", validateWith(schema), async (req, res, next) => {
       res.status(401).json("Wrong password!");
 
     const { password, ...others } = user._doc;
+    console.log("others: ", others);
 
     const token = jwt.sign(
       {
@@ -49,8 +50,8 @@ router.post("/", validateWith(schema), async (req, res, next) => {
         isAdmin: user.isAdmin,
         expoPushToken: user.expoPushToken,
       },
-      process.env.JWT_SEC,
-      { expiresIn: "14d" }
+      process.env.JWT_SEC
+      //
     );
     res.status(200).json(token);
   } catch (error) {

@@ -19,6 +19,7 @@ const ListingSchema = new mongoose.Schema(
     whatsapp: { type: String },
     inStock: { type: Boolean, default: true },
   },
+
   { timestamps: true }
 );
 

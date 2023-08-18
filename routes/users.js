@@ -73,15 +73,17 @@ router.post("/deleteUserAccount", async (req, res, next) => {
 
     const userListings = await Listing.find({ userId });
 
-    for (listing of userListings) {
-      try {
-        await s3Deletev2(listing.images);
-      } catch (error) {
-        next(error);
+    if (userListings) {
+      for (listing of userListings) {
+        try {
+          await s3Deletev2(listing.images);
+        } catch (error) {
+          next(error);
+        }
       }
-    }
 
-    await Listing.deleteMany({ userId });
+      await Listing.deleteMany({ userId });
+    }
 
     const result = await User.findByIdAndDelete(userId);
     if (!result) {
@@ -105,6 +107,7 @@ const upload = multer({
 
 //REGISTER / CREATE USER
 router.post("/", validateWith(schema), async (req, res, next) => {
+  console.log("body: ", body);
   let newUser = new User({
     firstname: req.body.firstname,
     lastname: req.body.lastname,
@@ -143,7 +146,21 @@ router.post("/", validateWith(schema), async (req, res, next) => {
                   <p>Country: ${savedUser.country}</p>`,
     };
 
-    await sgMail.send(regNotice);
+    await sgMail
+      .send(regNotice)
+      .then(() => {
+        res.json({
+          status: "PENDING",
+          message: "New user created",
+          data: {
+            userId: savedUer._id,
+            email: savedUser.email,
+          },
+        });
+      })
+      .catch((error) => {
+        next(error);
+      });
 
     res.status(201).json(savedUser);
   } catch (err) {
@@ -189,7 +206,7 @@ const sendOTPMail = async ({ _id, email }, res) => {
       html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
     };
 
-    // Mail options
+    // //  Mail options
     // const mailOptions = {
     //   from: process.env.AUTH_EMAIL,
     //   to: email,
@@ -197,7 +214,7 @@ const sendOTPMail = async ({ _id, email }, res) => {
     //   html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
     // };
 
-    // Hash otp
+    // // Hash otp
     // const saltRounds = 10;
 
     // const hashedOTP = await bcrypt.hash(otp, saltRounds);
