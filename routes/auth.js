@@ -32,7 +32,6 @@ router.post("/", validateWith(schema), async (req, res, next) => {
       res.status(401).json("Wrong password!");
 
     const { password, ...others } = user._doc;
-    console.log("others: ", others);
 
     const token = jwt.sign(
       {

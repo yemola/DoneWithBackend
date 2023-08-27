@@ -107,19 +107,18 @@ const upload = multer({
 
 //REGISTER / CREATE USER
 router.post("/", validateWith(schema), async (req, res, next) => {
-  console.log("body: ", body);
   let newUser = new User({
-    firstname: req.body.firstname,
-    lastname: req.body.lastname,
-    username: req.body.username,
-    email: req.body.email,
-    city: req.body.city,
-    state: req.body.state,
-    country: req.body.country,
+    firstname: req.body.firstname.trim(),
+    lastname: req.body.lastname.trim(),
+    username: req.body.username.trim(),
+    email: req.body.email.trim(),
+    city: req.body.city.trim(),
+    state: req.body.state.trim(),
+    country: req.body.country.trim(),
     countryCode: req.body.countryCode,
-    whatsapp: req.body.whatsapp,
+    whatsapp: req.body.whatsapp.trim(),
     password: CryptoJS.AES.encrypt(
-      req.body.password,
+      req.body.password.trim(),
       process.env.PASS_SEC
     ).toString(),
   });
@@ -132,7 +131,7 @@ router.post("/", validateWith(schema), async (req, res, next) => {
         .json("Email already registered. Use another email address");
 
     const savedUser = await newUser.save();
-
+    // res.status(201).json(savedUser);
     const regNotice = {
       to: "laflosd@gmail.com", // Change to your recipient
       from: process.env.AUTH_EMAIL, // Change to your verified sender
@@ -146,23 +145,16 @@ router.post("/", validateWith(schema), async (req, res, next) => {
                   <p>Country: ${savedUser.country}</p>`,
     };
 
-    await sgMail
-      .send(regNotice)
-      .then(() => {
-        res.json({
-          status: "PENDING",
-          message: "New user created",
-          data: {
-            userId: savedUer._id,
-            email: savedUser.email,
-          },
-        });
-      })
-      .catch((error) => {
-        next(error);
-      });
+    await sgMail.send(regNotice);
 
-    res.status(201).json(savedUser);
+    res.status(201).json({
+      status: "PENDING",
+      message: "New user created",
+      data: {
+        userId: savedUser._id,
+        email: savedUser.email,
+      },
+    });
   } catch (err) {
     next(err);
   }

@@ -13,3 +13,17 @@ function validateWith(schema) {
 }
 
 module.exports = validateWith;
+
+// .then(() => {
+//   res.json({
+//     status: "PENDING",
+//     message: "New user created",
+//     data: {
+//       userId: savedUser._id,
+//       email: savedUser.email,
+//     },
+//   });
+// })
+// .catch((error) => {
+//   next(error);
+// });
