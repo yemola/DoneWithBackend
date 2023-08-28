@@ -180,7 +180,7 @@ router.post(
           message: "This email is not registered",
         });
 
-      const { _id, email } = user;
+      const { _id, email } = user._doc;
 
       sendOTPMail({ _id, email }, res);
     } catch (error) {
@@ -200,14 +200,27 @@ const sendOTPMail = async ({ _id, email }, res) => {
       from: process.env.AUTH_EMAIL, // Change to your verified sender
       subject: "Password Reset Pin",
       text: "sorry about the stress, we understand",
-      html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
+      html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 2 minutes<b/>.</p>`,
     };
+
+    // //  Mail options
+    // const mailOptions = {
+    //   from: process.env.AUTH_EMAIL,
+    //   to: email,
+    //   subject: "Verify Your Email",
+    //   html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
+    // };
+
+    // // Hash otp
+    // const saltRounds = 10;
+
+    // const hashedOTP = await bcrypt.hash(otp, saltRounds);
 
     const newOTPVerification = new UserOTPVerification({
       userId: _id,
       otp,
       createdAt: Date.now(),
-      expiresAt: Date.now() + 3600000,
+      expiresAt: Date.now() + 120000,
     });
 
     await newOTPVerification.save();
@@ -325,10 +338,6 @@ router.put("/resetPassword/:id", async (req, res, next) => {
 
     res.status(200).send(updatedUser);
   } catch (error) {
-    // res.json({
-    //   status: "FAILED",
-    //   message: error.message,
-    // });
     next(error);
   }
 });
@@ -357,7 +366,6 @@ router.put("/updateUser", async (req, res, next) => {
     res.status(200).send(newUserDetails);
   } catch (err) {
     next(err);
-    // res.status(500).json(err);
   }
 });
 //UPDATE
@@ -395,7 +403,6 @@ router.put(
       res.status(200).send(updatedUser);
     } catch (err) {
       next(err);
-      // res.status(500).json(err);
     }
   }
 );
@@ -538,11 +545,10 @@ router.delete("/:id", verifyTokenAndAuthorization, async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    const { password, ...others } = user;
+    const { password, ...others } = user._doc;
     res.status(200).json(others);
   } catch (error) {
     next(error);
-    // res.status(500).json(error);
   }
 });
 
