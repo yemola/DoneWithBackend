@@ -203,19 +203,6 @@ const sendOTPMail = async ({ _id, email }, res) => {
       html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
     };
 
-    // //  Mail options
-    // const mailOptions = {
-    //   from: process.env.AUTH_EMAIL,
-    //   to: email,
-    //   subject: "Verify Your Email",
-    //   html: `<p>Enter the <b>${otp}</b> in the app to verify your email addresss and complete the password reset process.</p><p>This code <b>expires in 1 hour<b/>.</p>`,
-    // };
-
-    // // Hash otp
-    // const saltRounds = 10;
-
-    // const hashedOTP = await bcrypt.hash(otp, saltRounds);
-
     const newOTPVerification = new UserOTPVerification({
       userId: _id,
       otp,
@@ -305,10 +292,6 @@ router.post("/resendOTP", async (req, res, next) => {
     }
   } catch (error) {
     next(error);
-    // res.json({
-    //   status: "FAILED",
-    //   message: error.message,
-    // });
   }
 });
 
@@ -555,7 +538,7 @@ router.delete("/:id", verifyTokenAndAuthorization, async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    const { password, ...others } = user._doc;
+    const { password, ...others } = user;
     res.status(200).json(others);
   } catch (error) {
     next(error);
