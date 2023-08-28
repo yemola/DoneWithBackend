@@ -31,7 +31,7 @@ router.post("/", validateWith(schema), async (req, res, next) => {
     Originalpassword !== req.body.password &&
       res.status(401).json("Wrong password!");
 
-    const { password, ...others } = user._doc;
+    // const { password, ...others } = user._doc;
 
     const token = jwt.sign(
       {
