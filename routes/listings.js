@@ -145,11 +145,9 @@ router.delete("/:id", verifyToken, async (req, res, next) => {
 // router.delete("/deleteListings", verifyToken, async (req, res, next) => {
 //   const user = JSON.parse(req.query.user);
 //   const userId = user.userId;
-//   console.log("body: ", req.body);
 
 //   for (let listing of myListings) {
 //     const response = await s3Deletev2(listing.images);
-//     console.log("deleteResponse: ", response);
 //   }
 
 // try {
@@ -177,10 +175,8 @@ router.get("/:id", async (req, res, next) => {
 //GET MY PRODUCTs
 
 // router.post("/mylistings", async (req, res, next) => {
-//   console.log("reqbodyMY: ", req.body);
 //   let { userId } = req.body;
 //   const myListings = await Listing.find({ userId });
-//   console.log("myListings: ", myListings);
 //   res.send(resources);
 // });
 
@@ -221,7 +217,6 @@ router.get("/", async (req, res, next) => {
       });
     } else {
       items = await Listing.find();
-      // console.log("items", items); // items to get
     }
     res.status(200).json(items);
   } catch (err) {
