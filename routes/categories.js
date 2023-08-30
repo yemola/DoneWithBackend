@@ -10,7 +10,6 @@ router.get("/", async (req, res, next) => {
     res.status(200).send(categories);
   } catch (error) {
     next(error);
-    // res.status(400).json(error);
   }
 });
 
